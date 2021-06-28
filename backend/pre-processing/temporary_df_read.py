@@ -7,8 +7,9 @@ logic for reading D0 dataframe is hard coded for now; control to be given to the
 the try block is for 170619a2-delim-whitespace.csv
 the except block is for test1-delim-line.csv
 
-to test it from the feature extraction directory, use
-python feature_extractor.py ../test_data/170619a2-delim-whitespace.csv from the feature extraction directory
+to test it from the backend directory, use
+python feature_extractor.py ../test_data/170619a2-delim-whitespace.csv 
+from the backend directory
 
 This module will give you access to a dataframe with sorted out column headers and delimiters. 
 
