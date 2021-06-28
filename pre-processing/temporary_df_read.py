@@ -1,7 +1,7 @@
 """
 import this module in feature extraction script using
 
-import read_prototype.py
+from preprocessing import temporary_df_read
 
 logic for reading D0 dataframe is hard coded for now; control to be given to the user later. This module will be depreacted in our final version.
 the try block is for 170619a2-delim-whitespace.csv
