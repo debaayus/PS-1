@@ -35,19 +35,19 @@ def read_table():
                     d0 = pd.read_csv(filename)
                     header_list = list(d0.columns)
                     data = d0[0:].values.tolist()
-                    return (d0,data, header_list,fn, filename)
+                    return (data, header_list,fn, filename)
                 except:
                     d0 = pd.read_csv(filename, encoding='utf-16')
                     header_list = list(d0.columns)
                     data = d0[0:].values.tolist()
-                    return (d0,data, header_list,fn, filename)
+                    return (data, header_list,fn, filename)
             
         except:
             sg.popup_error('Error reading file. Click the error button to exit')
             return
 
 
-def show_table(d0, data, header_list, fn, filename): ### Col_index not yet integrated
+def show_table(data, header_list, fn, filename): ### Col_index not yet integrated
   
     font_family, font_size = font = ('Helvetica', 11)
     sg.set_options(font=font)
@@ -57,9 +57,8 @@ def show_table(d0, data, header_list, fn, filename): ### Col_index not yet integ
         auto_size_columns=True,  justification='left',    
         hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=True, pad=(25,25)
     )],
-    [sg.Text('Enter the row number where the true column headers are located. Enter 0 if the header row(in white) is the true column header', size=(45,2)), sg.Input(key='_IN1_', enable_events=True)],
-    [sg.Text('Enter the delimiter visible, if any(eg: |, \\t, ;)'), sg.Input(key='_IN2_', enable_events=True)],
-    [sg.Text("Enter index column number i.e., 0 for the first column. If there isn't any index then leave the field blank, an index will be created", size=(45,3)), sg.Input(key='_IN3_', enable_events=True)],
+    [sg.Text('Enter the row number where the true column headers are located. Enter -1 if the header row(in white background) is the true column header. To find the true column header row, please use the row column(the first column)', size=(45,5)), sg.Input(key='_IN1_', enable_events=True)],
+    [sg.Text('Enter the delimiter visible, if any(eg: |, \\t, ;). If not visible please leave it blank', size=(45,2)), sg.Input(key='_IN2_', enable_events=True)],
     [sg.Button('Submit')]]
     layout = [[sg.Frame('Input', frm_input_layout)]]
 
@@ -83,10 +82,10 @@ def show_table(d0, data, header_list, fn, filename): ### Col_index not yet integ
             break
         if event=='Submit':
             window.close()
-            read_table_final(values['_IN1_'], values['_IN2_'], values['_IN3_'], d0, filename) ### Col_index not yet integrated
+            read_table_final(values['_IN1_'], values['_IN2_'], filename) 
             
 
-def read_table_final(skiprow, delim, index_col, d0, filename): ### Col_index not yet integrated. 
+def read_table_final(skiprow, delim, filename):  
     if filename == '':
         sg.popup_error('Empty file. Click the error button to exit')
         return
@@ -98,39 +97,32 @@ def read_table_final(skiprow, delim, index_col, d0, filename): ### Col_index not
     
 
     if filename is not None:
-        try:
+        
             fn = filename.split('/')[-1]
                                 
-            if delim is '': ### Col_index not yet integrated
+            if delim is '': 
                 try:
-                    
-                    df = pd.read_csv(filename, skiprows=skip) ##dataframe read working fine
-                    header_list = list(df.columns)
+                    df = pd.read_csv(filename, skiprows=skip, encoding='utf-16', delimiter='\t') ##dataframe read working fine
+                    header_list = list(df.columns) 
                     data_final = df[0:].values.tolist()
-                    show_table_final(df,data_final, header_list_final ,fn) ### Col_index not yet integrated
-                except:
-                    
-                    df = pd.read_csv(filename, encoding='utf-16', skiprows=skip) ### Col_index not yet integrated
-                    header_list = list(df.columns)
-                    data = df[0:].values.tolist()
                     show_table_final(df,data_final, header_list_final ,fn) 
+                except:
+                    df = pd.read_csv(filename, skiprows=skip, delimiter='\t') 
+                    data = df[0:].values.tolist()
+                    show_table_final(df,data_final, header_list_final ,fn)
             else:
                 try:
-                    print("Here delim")
-                    df = pd.read_csv(filename, skiprows=skip, delimiter=delim) ### Col_index not yet integrated
+                    df = pd.read_csv(filename, skiprows=skip,delimiter=delim) 
                     header_list = list(df.columns)
                     data_final = df[0:].values.tolist()
                     show_table_final(df,data_final, header_list_final ,fn)
                     
                 except:
-                    print("Here delim")
-                    df = pd.read_csv(filename, encoding='utf-16', skiprows=skip, delimiter=delim) ### Col_index not yet integrated
+                    df = pd.read_csv(filename, skiprows=skip, encoding='utf-16', delimiter=delim) 
                     header_list = list(df.columns)
                     data = df[0:].values.tolist()
                     show_table_final(df,data_final, header_list_final ,fn)
-        except:
-            sg.popup_error('Error reading file. Click the error button to exit')
-            return
+        
 
 
 def show_table_final(df,data_final, header_list_final ,fn): ###Not working
@@ -145,8 +137,8 @@ def show_table_final(df,data_final, header_list_final ,fn): ###Not working
         [sg.Text('Confirm the above dataframe for further computation'), sg.Button('Confirm')]
     ]
 
-    print(data_final[0])
-
+    
+    
     window = sg.Window(fn, layout, grab_anywhere=False, resizable=False)
     event, values = window.read()
     window.close()
@@ -157,6 +149,8 @@ def show_table_final(df,data_final, header_list_final ,fn): ###Not working
         if event=='Confirm':
             window.close()
             feature_extraction(df, filename)### Not a real function just a placeholder.
+
+
             
 
 
@@ -173,10 +167,10 @@ def main():
         if event == sg.WIN_CLOSED or event == 'Exit':
             home.close()
         if event == 'Browse':
-            d0,data, header_list,fn, filename=read_table()
+            data, header_list,fn, filename=read_table()
             show_prompt = sg.popup_yes_no('Show the dataset?')
             if show_prompt=='Yes':
-                show_table(d0, data, header_list, fn, filename)
+                show_table(data, header_list, fn, filename)
 
 
 if __name__ == '__main__':
