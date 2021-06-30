@@ -1,6 +1,8 @@
-from preprocessing import *
+import pandas as pd
+import sys 
+import numpy as np
 
-def find_sensitivity(sensor,poi,df):
+def find_sensitivity(sensor,poi, df):
 
     ser1=df.ix[:,sensor]
     sensitivity=0
@@ -30,8 +32,32 @@ def response_slope(sensor,poi,df):
     resslope = gradient.min()
     return resslope
 
+def df_creation():
+    filename = sys.argv[1]
+
+    try:
+
+        df = pd.read_csv(filename, encoding = 'utf-16', skiprows=16, delimiter='\t', index_col='Scan') 
+        print(df.head())
+    except:
+        df = pd.read_csv(filename, encoding = 'utf-8', skiprows=0, delimiter='|', index_col=0) ## for
+        print(df.head())
+    return df 
+
+
+
 def main():
-    print(find_sensitivity(1,90,df))
+"""
+Removed the pre-processing module. Can directly run from this script. Use the command below to test:
+
+python feature_extraction.py ../test_data/170619a2-delim-whitespace.csv
+python feature_extraction.py ../test_data/test1-delim-line.csv
+
+"""
+    df=df_creation()
+    print(find_sensitivity(df.iloc[:,1],90, df))
+
+
     
 
 
