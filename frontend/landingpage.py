@@ -7,7 +7,7 @@ def landing_page():
     layout = [[sg.Text('Hello World')],
               [sg.Text('Press the browse button to attach .CSV or .XLSX file')],
               [sg.Button('Browse'), sg.Button('Exit')]]
-    return sg.Window('Welcome', layout, finalize=True, resizable=True)
+    return sg.Window('Welcome', layout, finalize=True, resizable=False, size=(800,600))
 
 
 
@@ -49,21 +49,21 @@ def read_table():
 
 def show_table(data, header_list, fn, filename): ### Col_index not yet integrated
   
-    font_family, font_size = font = ('Helvetica', 11)
+    font_family, font_size = font = ('Helvetica', 10)
     sg.set_options(font=font)
     frm_input_layout = [
     [sg.Table(values=data, headings=header_list,
         enable_events=True, key='_TABLE_', 
         auto_size_columns=True,  justification='left',    
-        hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=True, pad=(25,25)
+        hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=True
     )],
-    [sg.Text('Enter the row number where the true column headers are located. Enter -1 if the header row(in white background) is the true column header. To find the true column header row, please use the row column(the first column)', size=(45,5)), sg.Input(key='_IN1_', enable_events=True)],
+    [sg.Text('Enter the row number where the true column headers are located. Type X in the box if the header row(in white background) is the true column header. To find the true column header row number, please use the ROW column(the first column)', size=(45,5)), sg.Input(key='_IN1_', enable_events=True)],
     [sg.Text('Enter the delimiter visible, if any(eg: |, \\t, ;). If not visible please leave it blank', size=(45,2)), sg.Input(key='_IN2_', enable_events=True)],
-    [sg.Button('Submit')]]
+    [sg.Submit()]]
     layout = [[sg.Frame('Input', frm_input_layout)]]
 
     window = sg.Window(fn, auto_size_text=True, auto_size_buttons=True,
-                   grab_anywhere=False, resizable=False,
+                   grab_anywhere=True, resizable=False,
                    layout=layout, finalize=True,size=(800, 600))
 
 # Set real table width after here
@@ -81,8 +81,13 @@ def show_table(data, header_list, fn, filename): ### Col_index not yet integrate
         if event==sg.WIN_CLOSED:
             break
         if event=='Submit':
-            window.close()
-            read_table_final(values['_IN1_'], values['_IN2_'], filename) 
+            try:
+                read_table_final(values['_IN1_'], values['_IN2_'], filename)
+                break
+            except:
+                sg.popup_error('Error reading file. Click the error button to exit')
+                break
+    window.close() 
             
 
 def read_table_final(skiprow, delim, filename):  
@@ -92,6 +97,9 @@ def read_table_final(skiprow, delim, filename):
 
     data_final = []
     header_list_final = []
+    if skiprow is'X' or skiprow is 'x':
+        skiprow=-1
+
 
     skip=int(skiprow)+1
     
@@ -103,52 +111,78 @@ def read_table_final(skiprow, delim, filename):
             if delim is '': 
                 try:
                     df = pd.read_csv(filename, skiprows=skip, encoding='utf-16', delimiter='\t') ##dataframe read working fine
-                    header_list = list(df.columns) 
+                    header_list_final = list(df.columns) 
                     data_final = df[0:].values.tolist()
-                    show_table_final(df,data_final, header_list_final ,fn) 
+                    show_table_final(df,data_final, header_list_final ,fn)
                 except:
                     df = pd.read_csv(filename, skiprows=skip, delimiter='\t') 
-                    data = df[0:].values.tolist()
+                    header_list_final = list(df.columns) 
+                    data_final = df[0:].values.tolist()
                     show_table_final(df,data_final, header_list_final ,fn)
             else:
                 try:
-                    df = pd.read_csv(filename, skiprows=skip,delimiter=delim) 
-                    header_list = list(df.columns)
+                    df = pd.read_csv(filename, skiprows=skip, delimiter=delim) 
+                    header_list_final = list(df.columns)
+                    data_final = df[0:].values.tolist()
+                    show_table_final(df,data_final, header_list_final ,fn)
+                except:
+                    df = pd.read_csv(filename, skiprows=skip, encoding='utf-16', delimiter=delim) 
+                    header_list_final = list(df.columns)
                     data_final = df[0:].values.tolist()
                     show_table_final(df,data_final, header_list_final ,fn)
                     
-                except:
-                    df = pd.read_csv(filename, skiprows=skip, encoding='utf-16', delimiter=delim) 
-                    header_list = list(df.columns)
-                    data = df[0:].values.tolist()
-                    show_table_final(df,data_final, header_list_final ,fn)
+                
         
 
 
-def show_table_final(df,data_final, header_list_final ,fn): ###Not working
-    layout = [
-        [sg.Table(values=data_final,
-                  headings=header_list_final,
-                  font='Helvetica',
-                  pad=(25,25),
-                  display_row_numbers=False,
-                  auto_size_columns=True,
-                  num_rows=min(25, len(data_final)))],
-        [sg.Text('Confirm the above dataframe for further computation'), sg.Button('Confirm')]
-    ]
+def show_table_final(df,data_final, header_list_final ,fn): 
+    font_family, font_size = font = ('Helvetica', 10)
+    sg.set_options(font=font)
+    frm_input_layout = [
+    [sg.Table(values=data_final, headings=header_list_final,
+        enable_events=True, key='_TABLE_', 
+        auto_size_columns=True,  justification='left',    
+        hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=False
+    )],
+    [sg.Text('Select YES if index column(first column with values 1, 2 ,3) is visible. Select NO to allow the program to create an index column', size=(50,5)), 
+    sg.Radio('Yes', "yesorno", default=True, key='_RAD_'),
+    sg.Radio('No', "yesorno", default=False)],
+    [sg.Text('If you missed entering your delimiter, please restart the program', size=(50,1))], 
+    [sg.Text('Press submit to confirm the above dataframe for further computation', size=(50,1))],
+    [sg.Submit()]]
+    layout = [[sg.Frame('Input', frm_input_layout)]]
 
+    window = sg.Window(fn, auto_size_text=True, auto_size_buttons=True,
+                   grab_anywhere=True, resizable=False,
+                   layout=layout, finalize=True,size=(800, 600))
+
+# Set real table width after here
+    window.TKroot.update()
+    tree = window['_TABLE_'].Widget
+    tkfont = Font(family=font_family, size=font_size)
+    data_array = np.array([header_list_final]+data_final)
+    column_widths = [max(map(lambda item:tkfont.measure(item), data_array[:, i]))
+    for i in range(data_array.shape[1])]
+    for heading, width in zip(header_list_final, column_widths):
+        tree.column(heading, width=width+font_size+20)
     
-    
-    window = sg.Window(fn, layout, grab_anywhere=False, resizable=False)
-    event, values = window.read()
-    window.close()
     while True:
         event, values= window.read()
         if event==sg.WIN_CLOSED:
             break
-        if event=='Confirm':
-            window.close()
-            feature_extraction(df, filename)### Not a real function just a placeholder.
+
+        if event=='Submit':
+            if values['_RAD_']==False:
+                df.insert(0, column='index', value=[x for x in range(1, (df.shape[0]+1))])
+                header_list_final = list(df.columns)
+                data_final = df[0:].values.tolist()
+                show_table_final(df, data_final, header_list_final ,fn)
+                break
+            else:
+                window.close()
+    window.close()
+
+             
 
 
             
