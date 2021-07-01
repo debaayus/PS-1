@@ -1,7 +1,8 @@
 import PySimpleGUI as sg
 import pandas as pd 
 import numpy as np
-from input_gui import *
+
+from frontend_gui.input_gui import *
 
 
 
@@ -26,7 +27,7 @@ def data_input():
                 return (df, data_final, header_list_final ,fn)
             else:
                 break
-    window.close()
+    home.close()
 
 
 if __name__ == '__main__':
