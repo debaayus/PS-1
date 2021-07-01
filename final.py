@@ -1,8 +1,8 @@
-from frontend_gui import data_input
-from frontend_gui.input_gui import *
+from frontend_gui import in_dat
+
 
 def foo():
-	dff, data_finall, header_list_finall, fnn= data_input.data_input() 
+	dff, data_finall, header_list_finall, fnn= in_dat.data_input() 
 	print(dff.head())
 
 
