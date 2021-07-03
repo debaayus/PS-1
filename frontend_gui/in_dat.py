@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 from tkinter.font import Font
 
-
 def landing_page():
     layout = [[sg.Text('Hello World')],
               [sg.Text('Press the browse button to attach .CSV or .XLSX file')],
@@ -130,7 +129,7 @@ def show_table_final(df,data_final, header_list_final ,fn):
     sg.set_options(font=font)
     frm_input_layout = [
     [sg.Table(values=data_final, headings=header_list_final,
-        enable_events=True, key='_TABLE_', 
+        enable_events=False, key='_TABLE_', 
         auto_size_columns=True,  justification='left',    
         hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=False
     )],
@@ -164,7 +163,7 @@ def show_table_final(df,data_final, header_list_final ,fn):
         if event=='Submit':
             if values['_RAD_']==False:
                 try:
-                    df.insert(0, column='index', value=[x for x in range(1, (df.shape[0]+1))])
+                    df.insert(0, column='index', value=[int(x) for x in range(1, (df.shape[0]+1))])
                     header_list_final = list(df.columns)
                     data_final = df[0:].values.tolist()
                 except:
@@ -175,7 +174,14 @@ def show_table_final(df,data_final, header_list_final ,fn):
                     show_table_final(df, data_final, header_list_final ,fn)
                 except:
                     sg.popup_error('Error in calling show_table method again. Click the error button to exit')
-            return (df, data_final, header_list_final ,fn)
+            else:
+                t_col_no=sg.popup_get_text('Confirm the column number of the timestamp column (eg. Column number is 1 if the timestamp column is the 2nd column. If no timestamp column, then please enter X', size=(15,7))
+                window.close() 
+
+            df=df.set_index(df.columns[0])
+            header_list_final = list(df.columns)
+            data_final = df[0:].values.tolist()
+            return (df, data_final, header_list_final ,fn, t_col_no)
             break
     window.close()
     return
@@ -197,8 +203,8 @@ def data_input():
             if show_prompt=='Yes':
                 skiprow, delim, filename=show_table(data, header_list, fn, filename)
                 df, data_final, header_list_final, fn = read_table_final(skiprow, delim, filename)
-                df, data_final, header_list_final, fn = show_table_final(df,data_final, header_list_final ,fn) #any index updates if needed
-                return (df, data_final, header_list_final ,fn)
+                df, data_final, header_list_final, fn, t_col_no = show_table_final(df,data_final, header_list_final ,fn) #any index updates if needed
+                return (df, data_final, header_list_final ,fn, t_col_no)
             else:
                 break
     home.close()

@@ -61,7 +61,7 @@ def main():
 
     df=df_creation()
     print(df.columns)
-    print(find_sensitivity(df.columns[2],900, df))
+    print(find_sensitivity(df.columns[2],90, df))
 
 
     
