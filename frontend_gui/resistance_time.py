@@ -21,11 +21,12 @@ def response(df, t_col_no, dat_col):
     mpl.rcParams['ps.fonttype'] = 42
     mpl.rcParams['font.family'] = 'Arial'
 
-    fig = plt.figure(figsize=(10,6))
-    ax = fig.add_axes([0.05,0.05,1,1])
+    fig = plt.figure(figsize=(8,4))
+    ax = fig.add_subplot(111)
     for i in range((int(dat_col)-1),  df.shape[1]):
-        ax.plot(t_col, df.iloc[:,i])
+        ax.plot(t_col, df.iloc[:,i], linewidth=0.8)
     ax.xaxis.set_major_locator(plt.MaxNLocator(3))
+    ax.set_title('Response Curve', fontweight='bold')
     ax.set_xlabel('Scan', fontweight ='bold')
     ax.set_ylabel('Resistance', fontweight='bold')
     ax.legend(df.columns[(int(dat_col)-1): df.shape[1]], loc='best', prop={'size': 6})
@@ -35,10 +36,10 @@ def response(df, t_col_no, dat_col):
 
     layout = [[sg.Text('Plot of {} vs. {}'.format(df.columns[0], df.columns[1]))],
               [sg.Canvas(key='-CANVAS-', 
-                         size=(600,400),
+                         size=(800,600),
                          pad=(15,15))],
               [sg.Text('Press ok to view the next dashboard. Press save to choose parameters for saving image'), sg.Button('Ok'), sg.Button('Save')],
-              ]
+              [sg.Text('Press "New Plot" to create customized plots with your choice of columns'), sg.Button('New Plot')]]
 
 
 
@@ -47,10 +48,10 @@ def response(df, t_col_no, dat_col):
     # create the form and show it without the plot
     window = sg.Window('Plot', 
                        layout,
-                       size=(1200,800),
+                       size=(800,600),
                        finalize=True, 
                        element_justification='center', 
-                       font='Helvetica 18')
+                       font='Helvetica 10')
 
     # add the plot to the window
     fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
@@ -65,12 +66,15 @@ def response(df, t_col_no, dat_col):
             return
         if event is 'Save':
             save_plot_dashboard(fig)
+            window.close()
+            return
 
 
 
     window.close()
 
-def create_plot_only(df, t_col_no, dat_col, width, height):
+
+def create_plot_only(df, t_col_no, dat_col, width, height):##function to control size and other parameters like grid and whatnot
     fig_size=()
     fig_size=(float(width), float(height))
     t_col=[]
@@ -86,14 +90,22 @@ def create_plot_only(df, t_col_no, dat_col, width, height):
     mpl.rcParams['font.family'] = 'Arial'
 
     fig = plt.figure(figsize=fig_size)
-    ax = fig.add_axes([0.1,0.1,1,1])
-    for i in range((int(dat_col)-1),  (df.shape[0]+1)):
-        ax.plot(x=t_col, y=i)
+    ax = fig.add_subplot(111)
+    for i in range((int(dat_col)-1),  df.shape[1]):
+        ax.plot(t_col, df.iloc[:,i])
     ax.xaxis.set_major_locator(plt.MaxNLocator(3))
+    ax.set_title('Response Curve', fontweight='bold')
     ax.set_xlabel('Scan', fontweight ='bold')
     ax.set_ylabel('Resistance', fontweight='bold')
-    ax.legend()
+    ax.legend(df.columns[(int(dat_col)-1): df.shape[1]], loc='best', prop={'size': 6})
     return fig
+
+
+def customized_plotting(df, t_col_no, dat_col, width, height): ##function to create plot with specific columns
+    pass
+
+
+
 
 
 

@@ -185,9 +185,11 @@ def show_table_final(df,data_final, header_list_final ,fn):
                 header_list_final = list(df.columns)
                 data_final = df[0:].values.tolist()
                 window.close()
-                if t_col_no is not 'x' or t_col_no is not 'X' or t_col_no is not '':
+                try:
                     t_col_mod=int(t_col_no)-1
                     t_col_no=str(t_col_mod)
+                except:
+                    pass
                 dat_col_mod=int(dat_col)-1
                 dat_col=str(dat_col_mod)
                 return (df, data_final, header_list_final ,fn, t_col_no, dat_col)
