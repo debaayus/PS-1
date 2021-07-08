@@ -24,7 +24,7 @@ def savepng(fig, dirname, filename, dots_per_inch):
 
 
 def savejpeg(fig, dirname, filename, dots_per_inch):
-        fig, dirname, filename, dots_per_inch
+        fig_path=dirname+'/'+filename+'.jpeg'
         fig.savefig(fig_path, format='jpeg', dpi=float(dots_per_inch), bbox_inches='tight')
         return
 

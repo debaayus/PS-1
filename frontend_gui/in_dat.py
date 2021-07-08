@@ -106,7 +106,7 @@ def read_table_final(skiprow, delim, filename):
                     df = pd.read_csv(filename, skiprows=skip, encoding='utf-16', delimiter='\t') ##dataframe read working fine
                 except:
                     try:
-                        df = pd.read_csv(filename, skiprows=skip, delimiter='\t')
+                        df = pd.read_csv(filename, skiprows=skip)
                     except:
                         sg.popup_error('Error reading file in the read_table_final method. Click the error button to exit')
                         return
