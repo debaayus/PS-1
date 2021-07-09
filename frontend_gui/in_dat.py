@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 from tkinter.font import Font
 
-
 def landing_page():
     layout = [[sg.Text('Hello World')],
               [sg.Text('Press the browse button to attach .CSV or .XLSX file')],
@@ -107,7 +106,7 @@ def read_table_final(skiprow, delim, filename):
                     df = pd.read_csv(filename, skiprows=skip, encoding='utf-16', delimiter='\t') ##dataframe read working fine
                 except:
                     try:
-                        df = pd.read_csv(filename, skiprows=skip, delimiter='\t')
+                        df = pd.read_csv(filename, skiprows=skip)
                     except:
                         sg.popup_error('Error reading file in the read_table_final method. Click the error button to exit')
                         return
@@ -130,7 +129,7 @@ def show_table_final(df,data_final, header_list_final ,fn):
     sg.set_options(font=font)
     frm_input_layout = [
     [sg.Table(values=data_final, headings=header_list_final,
-        enable_events=True, key='_TABLE_', 
+        enable_events=False, key='_TABLE_', 
         auto_size_columns=True,  justification='left',    
         hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=False
     )],
@@ -156,6 +155,8 @@ def show_table_final(df,data_final, header_list_final ,fn):
     for heading, width in zip(header_list_final, column_widths):
         tree.column(heading, width=width+font_size+20)
     
+    t_col_no=''
+    dat_col=''
     while True:
         event, values= window.read()
         if event==sg.WIN_CLOSED:
@@ -164,19 +165,35 @@ def show_table_final(df,data_final, header_list_final ,fn):
         if event=='Submit':
             if values['_RAD_']==False:
                 try:
-                    df.insert(0, column='index', value=[x for x in range(1, (df.shape[0]+1))])
+                    df.insert(0, column='index', value=[int(x) for x in range(1, (df.shape[0]+1))])
                     header_list_final = list(df.columns)
                     data_final = df[0:].values.tolist()
+                    t_col_no=sg.popup_get_text('Confirm the column number of the timestamp column (eg. Column number is 1 if the timestamp column is the 1st column. If no timestamp column, then please enter X', size=(15,7))
+                    dat_col=sg.popup_get_text('Confirm the column number of the first sensor data. (eg. Column number is 2 if the first sensor data column is the 2nd column.)', size= (15,4))
+                    df=df.set_index(df.columns[0])
+                    header_list_final = list(df.columns)
+                    data_final = df[0:].values.tolist()
+                    window.close()
+                    return (df, data_final, header_list_final ,fn, t_col_no, dat_col)
                 except:
                     sg.popup_error('Error in index insertion method. Click the error button to exit')
                     break
+            if values['_RAD_'] is True:
+                t_col_no=sg.popup_get_text('Confirm the column number of the timestamp column (eg. Column number is 1 if the timestamp column is the 1st column. If no timestamp column, then please enter X', size=(15,7))
+                dat_col=sg.popup_get_text('Confirm the column number of the first sensor data. (eg. Column number is 2 if the first sensor data column is the 2nd column.)', size= (15,4))
+                df=df.set_index(df.columns[0])
+                header_list_final = list(df.columns)
+                data_final = df[0:].values.tolist()
+                window.close()
                 try:
-                    window.close()
-                    show_table_final(df, data_final, header_list_final ,fn)
+                    t_col_mod=int(t_col_no)-1
+                    t_col_no=str(t_col_mod)
                 except:
-                    sg.popup_error('Error in calling show_table method again. Click the error button to exit')
-            return (df, data_final, header_list_final ,fn)
-            break
+                    pass
+                dat_col_mod=int(dat_col)-1
+                dat_col=str(dat_col_mod)
+                return (df, data_final, header_list_final ,fn, t_col_no, dat_col)
+
     window.close()
     return
 
@@ -197,8 +214,8 @@ def data_input():
             if show_prompt=='Yes':
                 skiprow, delim, filename=show_table(data, header_list, fn, filename)
                 df, data_final, header_list_final, fn = read_table_final(skiprow, delim, filename)
-                df, data_final, header_list_final, fn = show_table_final(df,data_final, header_list_final ,fn) #any index updates if needed
-                return (df, data_final, header_list_final ,fn)
+                df, data_final, header_list_final, fn, t_col_no, dat_col = show_table_final(df,data_final, header_list_final ,fn) #any index updates if needed
+                return (df, data_final, header_list_final ,fn, t_col_no, dat_col)
             else:
                 break
     home.close()

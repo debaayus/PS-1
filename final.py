@@ -1,9 +1,13 @@
 from frontend_gui import in_dat
+from frontend_gui import resistance_time
 
 
 def foo():
-	dff, data_finall, header_list_finall, fnn= in_dat.data_input() 
-	print(dff.head())
+	df, data_final, header_list_final, fn, t_col_no, dat_col= in_dat.data_input()
+	resistance_time.response(df, t_col_no, dat_col)
+
+	
+
 
 
 
