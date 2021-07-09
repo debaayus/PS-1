@@ -2,41 +2,71 @@ import pandas as pd
 import sys 
 import numpy as np
 
-def find_sensitivity(sensor,poi, df):
-
-    ser1=df.loc[:,sensor]
-    sensitivity=0
+def base_line(poi,ser1):
     baseline=0
-    print(ser1.head(30))
     for i in range(poi-30,poi):
         baseline+=ser1[i]
     baseline/=30
+    return baseline
+
+def find_sensitivity(sensor,poi, df,next):
+
+    ser1=df.iloc[:,sensor]
+    sensitivity=0
+    baseline=base_line(poi,ser1)
     sens=[]
     
-    for i in range(poi-90, poi+210):
+    for i in range(poi,poi+next):
         sens.append(abs((ser1[i]-baseline)/baseline))
     sensitivity = max(sens)
     return sensitivity
 
     
 
-def grad(x):
-    for i in range(x.size-1):
-        x[i]=x[i+1]-x[i]
-    return x
+def grad(x,poi,next,gap):
+    gradient=[]
+    for i in range(poi+1,poi+next):
+        gradient.append((x[i]-x[i-1])/gap)
+    return gradient
 
-def recovery_slope(sensor,poi,df):
-    ser1=df.ix[poi-90:poi+210,sensor]
-    gradient = grad(ser1)
-    recslope = gradient.max()
+def recovery_slope(sensor,poi,df,next,gap):
+    ser1=df.iloc[poi-1:poi+next-1,sensor]
+    gradient = grad(ser1,poi,next,gap)
+    recslope = max(gradient)
     return recslope
 
-def response_slope(sensor,poi,df):
-    ser1=df.ix[poi-90:poi+210,sensor]
-    gradient = grad(ser1)
-    resslope = gradient.min()
+def response_slope(sensor,poi,df,next,gap):
+    ser1=df.iloc[poi-1:poi+next-1,sensor]
+    gradient = grad(ser1,poi,next,gap)
+    resslope = min(gradient)
     return resslope
 
+def tip(ser):
+    tipp=ser[0]
+    for i in ser:
+        tipp=min(i,tipp)
+    return tipp
+
+def response_time(sensor,poi,df,next,gap):
+    ser1=df.iloc[:,sensor]
+    baseline =base_line(poi,ser1)
+    ser2=df.iloc[poi-1:poi+next-1,sensor]
+    tipp = tip(ser2)
+    delR = (baseline-tipp)*0.90
+    R90 = ser2[poi]-delR
+
+"""def response_time(sensor,poi,df):
+    ser1=df.iloc[:,sensor]
+    baseline=base_line(poi,ser1)
+    ser2=df.iloc[poi-1:poi+299,sensor]
+    tipp = tip(poi,ser2)
+    delR=(baseline-tipp)*0.90
+    R90 = ser2[poi]-delR
+    index1 = min(abs(ser1[poi:tipp]-R90)) +  poi-1
+    index2 = index1 -1
+    time = ((((R90-ser1[index2])/(ser1[index1]-ser1[index2]))*(ser1[index1]-ser1[index2]))+ser1[index2])-ser1[poi]
+    return time
+"""
 def df_creation():
     filename = sys.argv[1]
 
@@ -59,9 +89,19 @@ python feature_extraction.py ../test_data/test1-delim-line.csv
 """
 def main():
 
+
     df=df_creation()
-    print(df.columns)
-    print(find_sensitivity(df.columns[2],900, df))
+    gap = int(input('Enter the difference of time between two consecutive readings (in sec): '))
+    poi = int(input('Enter the poi (in sec): '))
+    poi=poi/gap
+    next = int(input('Enter the gap between two consecutive poi (in sec): '))
+    next=next/gap
+    sensor = int(input('Enter the sensor number: '))
+    print(find_sensitivity(sensor+1,poi,df,next))
+    print(response_slope(sensor+1,poi, df,next,gap))
+    print(recovery_slope(sensor+1,poi, df,next,gap))
+"""    print(response_time(2,300, df))"""
+
 
 
     
