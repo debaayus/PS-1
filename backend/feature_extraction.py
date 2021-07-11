@@ -41,32 +41,40 @@ def response_slope(sensor,poi,df,next,gap):
     resslope = min(gradient)
     return resslope
 
-def tip(ser):
-    tipp=ser[0]
-    for i in ser:
-        tipp=min(i,tipp)
-    return tipp
+def tip(ser,poi,next):
+    tipp=ser[poi]
+    index=poi
+    for i in range(poi,poi+next):
+        tipp=min(ser[i],tipp)
+        if tipp == ser[i]:
+            index = i            
+    return index
 
 def response_time(sensor,poi,df,next,gap):
     ser1=df.iloc[:,sensor]
     baseline =base_line(poi,ser1)
     ser2=df.iloc[poi-1:poi+next-1,sensor]
-    tipp = tip(ser2)
-    delR = (baseline-tipp)*0.90
-    R90 = ser2[poi]-delR
-
-"""def response_time(sensor,poi,df):
-    ser1=df.iloc[:,sensor]
-    baseline=base_line(poi,ser1)
-    ser2=df.iloc[poi-1:poi+299,sensor]
-    tipp = tip(poi,ser2)
-    delR=(baseline-tipp)*0.90
-    R90 = ser2[poi]-delR
-    index1 = min(abs(ser1[poi:tipp]-R90)) +  poi-1
+    index_tip = tip(ser2,poi,next)
+    delR = (baseline-ser2[index_tip])*0.90
+    """R90 = ser2[poi]-delR
+    index1= abs(ser2[poi]-R90)
+    for i in range(poi,index_tip+1):
+        index1 = min(index1,abs(ser2[i]-R90))
+    index1 = index1 + poi -1
     index2 = index1 -1
-    time = ((((R90-ser1[index2])/(ser1[index1]-ser1[index2]))*(ser1[index1]-ser1[index2]))+ser1[index2])-ser1[poi]
+    time = ((((R90-ser1[int(index2)])/(ser1[int(index1)]-ser1[int(index2)]))*(int(index1)*gap-int(index2)*gap))+int(index2)*gap)+poi*gap"""        
+    time = (delR/(ser1[poi]-ser1[index_tip])*(abs(index_tip-poi))*gap)
     return time
-"""
+
+def recovery_time(sensor,poi,df,next,gap):
+    ser1=df.iloc[:,sensor]
+    baseline =base_line(poi+next,ser1)
+    ser2=df.iloc[poi-1:poi+next-1,sensor]
+    index_tip = tip(ser2,poi,next)
+    delR = (baseline-ser2[index_tip])*0.90
+    time = (delR/(ser1[poi+next]-ser1[index_tip])*(abs(index_tip-poi+next))*gap)
+    return time
+
 def df_creation():
     filename = sys.argv[1]
 
@@ -93,14 +101,15 @@ def main():
     df=df_creation()
     gap = int(input('Enter the difference of time between two consecutive readings (in sec): '))
     poi = int(input('Enter the poi (in sec): '))
-    poi=poi/gap
+    poi=poi//gap
     next = int(input('Enter the gap between two consecutive poi (in sec): '))
-    next=next/gap
+    next=next//gap
     sensor = int(input('Enter the sensor number: '))
     print(find_sensitivity(sensor+1,poi,df,next))
     print(response_slope(sensor+1,poi, df,next,gap))
     print(recovery_slope(sensor+1,poi, df,next,gap))
-"""    print(response_time(2,300, df))"""
+    print(response_time(sensor+1,poi, df,next,gap))
+    print(recovery_time(sensor+1,poi, df,next,gap))
 
 
 
