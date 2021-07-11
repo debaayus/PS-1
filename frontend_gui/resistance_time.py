@@ -7,9 +7,11 @@ import PySimpleGUI as sg
 from frontend_gui.plotting_utils import draw_figure, draw_figure_w_toolbar, Toolbar
 from frontend_gui.saving_plot import save_plot_dashboard
 
-
+"""
+Seeks to plot the resistance vs time curve. This function is the first step and plots all the data against the index or timestamp based on availability
+"""
 def response(df, t_col_no, dat_col):
-    t_col=[]
+    t_col=[] ##This will hold the x-axis column for plotting against
     if t_col_no is 'X' or t_col_no is 'x' or t_col_no is '':
         t_col=df.index.values.tolist()
     else:
@@ -18,13 +20,13 @@ def response(df, t_col_no, dat_col):
 
     """Figure creation using matplotlib"""
     mpl.rcParams['pdf.fonttype'] = 42
-    mpl.rcParams['ps.fonttype'] = 42
-    mpl.rcParams['font.family'] = 'Arial'
+    mpl.rcParams['ps.fonttype'] = 42 ##necessary for IEEE standard PDF type publications
+    mpl.rcParams['font.family'] = 'Arial' ##Recommended for publications
 
     fig = plt.figure(figsize=(8,4))
     ax = fig.add_subplot(111)
     for i in range((int(dat_col)-1),  df.shape[1]):
-        ax.plot(t_col, df.iloc[:,i], linewidth=0.8)
+        ax.plot(t_col, df.iloc[:,i], linewidth=0.8)  ##reduction of linewidth to see the noise more clearly
     ax.xaxis.set_major_locator(plt.MaxNLocator(3))
     ax.set_title('Response Curve', fontweight='bold')
     ax.set_xlabel('Scan', fontweight ='bold')
@@ -57,7 +59,7 @@ def response(df, t_col_no, dat_col):
     fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
 
     
-
+    #event loop designed in a way to allow the user to keep seeing the original plot till satisfied
     while True:
         event, values = window.read()
         if event is sg.WIN_CLOSED:
@@ -74,9 +76,10 @@ def response(df, t_col_no, dat_col):
     window.close()
 
 
-
+"""
+This function plots the response curve using parameters from a dashboard function. Lots of parameters are left upto the user.
+"""
 def preview_plot(df, width, height, title, xlabel, ylabel, legend, max_x_ticks, max_y_ticks, x_col, y_col):
-##function to control size and other parameters like grid and whatnot
     fig_size=(float(width), float(height))
 
 
@@ -133,7 +136,10 @@ def preview_plot(df, width, height, title, xlabel, ylabel, legend, max_x_ticks, 
 
     window.close()
 
-
+"""
+Extremely useful plotting dashboard. Extreme control with the user. Default values are a good guide to understand the parameters.
+The preview function allows the user to keep plotting till satisfied. The structure of this code is highly reusable for further functions.
+"""
 def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create plot with specific columns
     layout1=[
     [sg.Text('Enter the title of the plot', size=(45,1)), sg.Input(default_text='Response Curve', key='_TITLE_', enable_events=True)],
@@ -146,6 +152,8 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
     [sg.Text('Does the plot need a legend', size=(45,1)), sg.Radio('Yes', "legend", default=True, key='_LEGEND_'), sg.Radio('No', "legend", default=False)],
     [sg.Text('The pdf.fonttype used is type no 42 keeping in line with IEEE standards', size=(55,1))]]
     
+    #this block is to determine the x-axis and still leave functionality to the user without a fuss. 
+    #The reasoning for the default_values list having a comma on line 160 and 167 is that the list expects greater than one value and doesn't work with just one entry.
     if t_col_no is 'X' or t_col_no is 'x' or t_col_no is '':
         layout2=[
         [sg.Text('Choose the X-axis columns. You can choose the timestamp column if available or the index column', size=(45,1))],

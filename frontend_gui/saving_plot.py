@@ -4,6 +4,10 @@ from frontend_gui.saving_utils import savepng
 from frontend_gui.saving_utils import savejpeg
 from frontend_gui.saving_utils import savepdf
 
+"""
+The commented out code is an alternative method which was abandoned due to ambiguity with the button functioning.
+Howver, any future author is free to try the alternative layout.
+"""
 def save_plot_dashboard(fig):
     #file_nm_layout = [
     #[sg.Text('Enter the name of the figure in the file-browsing window which opens on clicking "Save As". Do not add any extensions', size=(50,3))],
@@ -13,13 +17,14 @@ def save_plot_dashboard(fig):
 
 
 
-    dirname = sg.popup_get_folder('Please choose a folder to save the plots')
+    dirname = sg.popup_get_folder('Please choose a folder to save the plots') ##extremely useful element in pysimplegui
 
-    listboxlayout=[[sg.Listbox(['PNG', 'JPEG', 'TIFF', 'PDF'], size=(12,4), select_mode='LISTBOX_SELECT_MODE_SINGLE', key='-LB-')]]
+    ##more formats can be added based on the user's requirements
+    listboxlayout=[[sg.Listbox(['PNG', 'JPEG', 'TIFF', 'PDF'], size=(12,4), select_mode='LISTBOX_SELECT_MODE_SINGLE', key='-LB-')]] 
 
     
-    layout=[[sg.Text('Enter the filename', size=(45,1)), sg.Input(key='_FN_', enable_events=True)],
-    [sg.Text('Enter dots per inch(DPI)', size=(45,1)), sg.Input(key='_DPI_', enable_events=True)],
+    layout=[[sg.Text('Enter the filename', size=(45,1)), sg.Input(default_text='figure', key='_FN_', enable_events=True)],
+    [sg.Text('Enter dots per inch(DPI)', size=(45,1)), sg.Input(default_text='150', key='_DPI_', enable_events=True)],   ##DPI extremely necessary
     [sg.Frame('Choose format', layout=listboxlayout)],
     [sg.Text('Click "Save" to save the plot and "Exit" to quit the plot saving dashboard', size=(50,1))],
     [sg.Button('Save'), sg.Button('Exit')]]

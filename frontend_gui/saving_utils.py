@@ -2,7 +2,10 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from io import BytesIO
 
-
+"""
+Necessary functions for scientists to create publication format images. Quite a bit of control in plotting is given to the user at different stages.
+This code is absolutely reusable at all points of this project.
+"""
 def savetiff(fig, dirname, filename, dots_per_inch):
         fig_path=dirname+'/'+filename+'.tiff'
         png1 = BytesIO()
