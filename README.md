@@ -4,8 +4,8 @@
 This is a project to satisfy the requirements of BITS F221 Practice School-I Summer term 2021.
 
 ### Two parts in the project:
-* Backend- Deals with pre-processing of the data, feature extraction, data matrix creation, machine learning with dimensionality reduction
-* Frontend- GUI to wrap the backend modules
+* Backend- Feature extraction and data matrix creation
+* Frontend- Deals with pre-processing of the data, plotting, and wraps the backend modules
 
 
 ### Libraries to be used:
