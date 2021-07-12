@@ -79,7 +79,7 @@ def response(df, t_col_no, dat_col):
 """
 This function plots the response curve using parameters from a dashboard function. Lots of parameters are left upto the user.
 """
-def preview_plot(df, width, height, title, xlabel, ylabel, legend, max_x_ticks, max_y_ticks, x_col, y_col):
+def preview_plot(df, width, height, title, xlabel, ylabel, legend, grid, max_x_ticks, max_y_ticks, x_col, y_col):
     fig_size=(float(width), float(height))
 
 
@@ -103,6 +103,11 @@ def preview_plot(df, width, height, title, xlabel, ylabel, legend, max_x_ticks, 
         ax.legend(y_col, loc='best', prop={'size': 6})
     else:
         pass
+    if grid is True:
+        ax.grid(True)
+    else:
+        ax.grid(False)
+
 
     layout = [[sg.Text('Plot of Scan vs Resistance')],
               [sg.Canvas(key='-CANVAS-', 
@@ -126,7 +131,7 @@ def preview_plot(df, width, height, title, xlabel, ylabel, legend, max_x_ticks, 
         if event is sg.WIN_CLOSED:
             break
         if event is 'Ok':            
-            return
+            break
         if event is 'Save':
             save_plot_dashboard(fig)
             window.close()
@@ -149,7 +154,8 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
     [sg.Text('Enter the y-axis label of the plot', size=(45,1)), sg.Input(default_text='Resistance',key='_YLABEL_', enable_events=True)],
     [sg.Text('Enter the desired number of ticks in the x-axis', size=(45,1)), sg.Input(default_text='3', key='_XTICKS_', enable_events=True)],
     [sg.Text('Enter the desired number of ticks in the y-axis', size=(45,1)), sg.Input(default_text='3', key='_YTICKS_', enable_events=True)],
-    [sg.Text('Does the plot need a legend', size=(45,1)), sg.Radio('Yes', "legend", default=True, key='_LEGEND_'), sg.Radio('No', "legend", default=False)],
+    [sg.Text('Do you require a legend in the plot?', size=(45,1)), sg.Radio('Yes', "legend", default=True, key='_LEGEND_'), sg.Radio('No', "legend", default=False)],
+    [sg.Text('Do you require a grid in the plot?', size=(45,1)), sg.Radio('Yes', "grid", default=True, key='_GRID_'), sg.Radio('No', "grid", default=False)],
     [sg.Text('The pdf.fonttype used is type no 42 keeping in line with IEEE standards', size=(55,1))]]
     
     #this block is to determine the x-axis and still leave functionality to the user without a fuss. 
@@ -172,7 +178,8 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
     
     layout3=[
     [sg.Text('Choose the Y-axis columns to be plotted. Multiple columns can be chosen', size=(45,1))],
-    [sg.Listbox(values=y_cols, default_values=y_cols, select_mode='multiple', key='_DATA_', size=(30, 4))]]
+    [sg.Listbox(values=y_cols, default_values=y_cols, select_mode='multiple', key='_DATA_', size=(30, 6))],
+    [sg.Text('Black means selected and white means not selected')]]
 
     layout=[
     [sg.Frame('Plot Parameters', layout=layout1)],
@@ -180,7 +187,7 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
     [sg.Text('Click preview to view the created plot and click exit to go back to the original program', size=(45,2))],
     [sg.Button('Preview'), sg.Button('Exit')]]
 
-    window=sg.Window('Plotting dashborad', layout=layout, size=(800,700))
+    window=sg.Window('Plotting dashborad', layout=layout, size=(800,600))
 
     while True:
         event, v = window.Read()
@@ -190,10 +197,19 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
             if v['_XAXIS_'][0] is 'Index':
                 t_col=df.index.values.tolist()
             else:
-                t_col=df.iloc[:,(int(t_col_no)-1)]
+                if v['_XAXIS_'][0] is None:
+                    sg.popup_error('At least one x-axis column must be selected')
+                    continue
+                else:
+                    t_col=df.iloc[:,(int(t_col_no)-1)]
+            if v['_DATA_'][0] is None:
+                sg.popup_error('At least one y-axis column must be selected')
+                continue
+
                         
             preview_plot(df, v['_WIDTH_'], v['_HEIGHT_'], v['_TITLE_'], 
-                v['_XLABEL_'], v['_YLABEL_'], v['_LEGEND_'], v['_XTICKS_'], v['_YTICKS_'], t_col, v['_DATA_'])
+                v['_XLABEL_'], v['_YLABEL_'], v['_LEGEND_'], v['_GRID_'], 
+                v['_XTICKS_'], v['_YTICKS_'], t_col, v['_DATA_'])
 
     window.close()
     return

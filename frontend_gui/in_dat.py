@@ -4,15 +4,23 @@ import numpy as np
 from tkinter.font import Font
 
 
+
 """
 The first page seen by the user when he starts the application.
 08/07- More functionality of the home/landing page can be added and it can be made to look good
 """
 def landing_page():
-    layout = [[sg.Text('Hello World')],
-              [sg.Text('Press the browse button to attach .CSV or .XLSX file')],
-              [sg.Button('Browse'), sg.Button('Exit')]]
-    return sg.Window('Welcome', layout, finalize=True, resizable=False, size=(800,600))
+
+    layout2 = [[sg.Text('Press the button below to upload a csv file of a data matrix and to proceed to the visualization and multivaraite analysis of the data matrix', size=(50,5))],
+    [sg.Button('Upload data matrix')]]
+
+    layout3 = [[sg.Text('Press the button below to upload a csv file of the complete response data, i.e., resistance vs time/index data, and begin the full analysis pipeline', size=(50,5))],
+    [sg.Button('Upload response data')]]
+
+    layout=[
+    [sg.Frame('Multivariate Analysis of Feature matrix', layout=layout2)], [sg.Frame('Full pipeline for analysis of response data', layout=layout3)],
+    [sg.Button('Exit')]]
+    return sg.Window('SMO sensor data analysis Toolbox', layout=layout, finalize=True, resizable=False, size=(500,400))
 
 
 
@@ -40,10 +48,10 @@ def read_table():
     if filename is not None:
         fn = filename.split('/')[-1]
         try:
-            d0 = pd.read_csv(filename)
+            d0 = pd.read_csv(filename, delimiter='\t')
         except:
             try:
-                d0 = pd.read_csv(filename, encoding='utf-16')
+                d0 = pd.read_csv(filename, encoding='utf-16', delimiter='\t')
             except:
                 sg.popup_error('Error reading file in the read_table method. Click the error button to exit')
                 return
@@ -51,6 +59,8 @@ def read_table():
         header_list = list(d0.columns)
         data = d0[0:].values.tolist()
         return (data, header_list,fn, filename)
+
+
 
 
 """
@@ -70,7 +80,7 @@ def show_table(data, header_list, fn, filename):
         hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=True
     )],
     [sg.Text('Enter the row number where the true column headers are located. Type X in the box if the header row(in white background) is the true column header. To find the true column header row number, please use the ROW column(the first column)', size=(45,5)), sg.Input(key='_IN1_', enable_events=True)],
-    [sg.Text('Enter the delimiter visible, if any(eg: |, \\t, ;). If not visible please leave it blank', size=(45,2)), sg.Input(key='_IN2_', enable_events=True)],
+    [sg.Text('Enter the delimiter visible, if any(eg: "|"pipe, ";" semi colon, ","comma, ":"colon). If not visible please leave it blank', size=(45,3)), sg.Input(key='_IN2_', enable_events=True)],
     [sg.Submit()]]
     layout = [[sg.Frame('Input', frm_input_layout)]]
 
@@ -103,6 +113,8 @@ def show_table(data, header_list, fn, filename):
     return
 
 
+
+
 """
 This function definitely has some issues. The first of which is the problem of encoding. Most files are utf-8 however during testing, the author
 ran into a file with encoding utf-16. Since, pandas doesn't automatically detect encodings. This particular usecase had to be hardcoded.
@@ -121,7 +133,7 @@ def read_table_final(skiprow, delim, filename):
 
     data_final = []
     header_list_final = []
-    if skiprow is'X' or skiprow is 'x':
+    if skiprow is'X' or skiprow is 'x' or skiprow is '':
         skiprow=-1
 
 
@@ -154,6 +166,10 @@ def read_table_final(skiprow, delim, filename):
             header_list_final = list(df.columns) 
             data_final = df[0:].values.tolist()
             return (df,data_final, header_list_final ,fn)
+
+
+
+
 
 
 """
@@ -233,6 +249,65 @@ def show_table_final(df,data_final, header_list_final ,fn):
 
     window.close()
     return
+
+def show_table_MVA(dm, data_mat_final, header_list_mat_final, fn):
+    font_family, font_size = font = ('Helvetica', 10)
+    sg.set_options(font=font)
+    frm_table_layout = [
+    [sg.Table(values=data_mat_final, headings=header_list_mat_final,
+        enable_events=False, key='_TABLE_', 
+        auto_size_columns=True,  justification='left',    
+        hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=False
+    )]]
+    
+    param=[[sg.Text('Confirm the type of matrix:', size=(50,5))], 
+    [sg.Listbox(values=['Type I', 'Type II', 'Type III'], default_values=['Type I',], select_mode='single', key='_TYPE_', size=(30, 3))]]
+    
+    
+    layout = [[sg.Frame('Input', frm_table_layout)],
+    [sg.Frame('Type of matrix', layout=param)],
+    [sg.Text('If you missed entering your delimiter, please restart the program', size=(50,1))], 
+    [sg.Text('Press submit to confirm the above dataframe for further computation', size=(50,1))],
+    [sg.Submit()]]
+
+    window = sg.Window(fn, auto_size_text=True, auto_size_buttons=True,
+                   grab_anywhere=True, resizable=False,
+                   layout=layout, finalize=True,size=(800, 600))
+
+# Set real table width after here
+    window.TKroot.update()
+    tree = window['_TABLE_'].Widget
+    tkfont = Font(family=font_family, size=font_size)
+    data_array = np.array([header_list_mat_final]+data_mat_final)
+    column_widths = [max(map(lambda item:tkfont.measure(item), data_array[:, i]))
+    for i in range(data_array.shape[1])]
+    for heading, width in zip(header_list_mat_final, column_widths):
+        tree.column(heading, width=width+font_size+20)
+
+    while True:
+        event, values= window.read()
+        if event==sg.WIN_CLOSED:
+            break
+
+        if event=='Submit':
+            window.close()
+            if values['_TYPE_'][0]=='Type I':
+                return (dm, 1, fn)
+            elif values['_TYPE_'][0]=='Type II':
+                return (dm, 2, fn)
+            else:
+                return (dm, 3, fn)
+    window.close()
+    return
+
+
+
+
+
+
+
+
+
 """
 This is the main function which controls the event loops and program sequence for the input part of the GUI.
 """
@@ -243,20 +318,31 @@ def data_input():
     while True:  # Event Loop
         event, values = home.read()
 
-        if event == sg.WIN_CLOSED:  # if all windows were closed
+        if event == sg.WIN_CLOSED or event == 'Exit':  # if all windows were closed
             break
-        if event == sg.WIN_CLOSED or event == 'Exit':
-            home.close()
-        if event == 'Browse':
+        if event == 'Upload response data':
             data, header_list,fn, filename=read_table()
-            show_prompt = sg.popup_yes_no('Show the dataset?')
+            show_prompt = sg.popup_yes_no('Process the sensor response data?')
             if show_prompt=='Yes':
+                home.close()
                 skiprow, delim, filename=show_table(data, header_list, fn, filename)
                 df, data_final, header_list_final, fn = read_table_final(skiprow, delim, filename)
                 df, data_final, header_list_final, fn, t_col_no, dat_col = show_table_final(df,data_final, header_list_final ,fn) #any index updates if needed
                 return (df, data_final, header_list_final ,fn, t_col_no, dat_col)
             else:
                 break
+        if event=='Upload data matrix':
+            data, header_list,fn, filename=read_table()
+            show_prompt = sg.popup_yes_no('Process the feature matrix?')
+            if show_prompt=='Yes':
+                home.close()
+                skiprow, delim, filename=show_table(data, header_list, fn, filename)
+                df, data_final, header_list_final, fn = read_table_final(skiprow, delim, filename)
+                dm, typemat, fn = show_table_MVA(df, data_final, header_list_final ,fn) 
+                return (dm, typemat, fn)
+            else:
+                break
+
     home.close()
 
 
