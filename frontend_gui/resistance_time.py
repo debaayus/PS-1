@@ -40,7 +40,7 @@ def response(df, t_col_no, dat_col):
               [sg.Canvas(key='-CANVAS-', 
                          size=(600,300),
                          pad=(15,15))],
-              [sg.Text('Press ok to view the next dashboard. Press save to choose parameters for saving image'), sg.Button('Ok'), sg.Button('Save')],
+              [sg.Button('Proceed to Feature Extraction'), sg.Button('Save Plot')],
               [sg.Text('Press "New Plot" to create customized plots with your choice of columns'), sg.Button('New Plot')]]
 
 
@@ -64,9 +64,9 @@ def response(df, t_col_no, dat_col):
         event, values = window.read()
         if event is sg.WIN_CLOSED:
             break
-        if event is 'Ok':            
+        if event is 'Proceed to Feature Extraction':            
             return
-        if event is 'Save':
+        if event is 'Save Plot':
             save_plot_dashboard(fig)
         if event is 'New Plot':
             customized_plotting_dashboard(df, t_col_no, dat_col)
@@ -79,7 +79,7 @@ def response(df, t_col_no, dat_col):
 """
 This function plots the response curve using parameters from a dashboard function. Lots of parameters are left upto the user.
 """
-def preview_plot(df, width, height, title, xlabel, ylabel, legend, grid, max_x_ticks, max_y_ticks, x_col, y_col):
+def preview_plot(df, width, height, title, xlabel, ylabel, legend, max_x_ticks, max_y_ticks, x_col, y_col):
     fig_size=(float(width), float(height))
 
 
@@ -103,17 +103,14 @@ def preview_plot(df, width, height, title, xlabel, ylabel, legend, grid, max_x_t
         ax.legend(y_col, loc='best', prop={'size': 6})
     else:
         pass
-    if grid is True:
-        ax.grid(True)
-    else:
-        ax.grid(False)
+    
 
 
     layout = [[sg.Text('Plot of Scan vs Resistance')],
               [sg.Canvas(key='-CANVAS-', 
                          size=(600,400),
                          pad=(15,15))],
-              [sg.Text('Press ok to go back to the plotting dashboard. Press save to choose parameters for saving image'), sg.Button('Ok'), sg.Button('Save')]]
+              [sg.Text('Press exit preview to go back to the plotting dashboard. Press save to choose parameters for saving image'), sg.Button('Exit Preview'), sg.Button('Save')]]
 
 
     window = sg.Window('Plot', 
@@ -130,7 +127,7 @@ def preview_plot(df, width, height, title, xlabel, ylabel, legend, grid, max_x_t
         event, values = window.read()
         if event is sg.WIN_CLOSED:
             break
-        if event is 'Ok':            
+        if event is 'Exit Preview':            
             break
         if event is 'Save':
             save_plot_dashboard(fig)
@@ -155,7 +152,6 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
     [sg.Text('Enter the desired number of ticks in the x-axis', size=(45,1)), sg.Input(default_text='3', key='_XTICKS_', enable_events=True)],
     [sg.Text('Enter the desired number of ticks in the y-axis', size=(45,1)), sg.Input(default_text='3', key='_YTICKS_', enable_events=True)],
     [sg.Text('Do you require a legend in the plot?', size=(45,1)), sg.Radio('Yes', "legend", default=True, key='_LEGEND_'), sg.Radio('No', "legend", default=False)],
-    [sg.Text('Do you require a grid in the plot?', size=(45,1)), sg.Radio('Yes', "grid", default=True, key='_GRID_'), sg.Radio('No', "grid", default=False)],
     [sg.Text('The pdf.fonttype used is type no 42 keeping in line with IEEE standards', size=(55,1))]]
     
     #this block is to determine the x-axis and still leave functionality to the user without a fuss. 
@@ -208,8 +204,10 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
 
                         
             preview_plot(df, v['_WIDTH_'], v['_HEIGHT_'], v['_TITLE_'], 
-                v['_XLABEL_'], v['_YLABEL_'], v['_LEGEND_'], v['_GRID_'], 
+                v['_XLABEL_'], v['_YLABEL_'], v['_LEGEND_'], 
                 v['_XTICKS_'], v['_YTICKS_'], t_col, v['_DATA_'])
+
+            break
 
     window.close()
     return

@@ -3,39 +3,97 @@ import pandas as pd
 import numpy as np
 from tkinter.font import Font
 from frontend_gui.saving_data import save_data_dash
+##from backend import data matrix
 
-def show_table(data, header_list, fn, filename):
-	header_list = list(d0.columns)
-    data = d0[0:].values.tolist()
-    font_family, font_size = font = ('Helvetica', 10)
-    sg.set_options(font=font)
-    frm_input_layout = [
-    [sg.Table(values=data, headings=header_list,
-        enable_events=True, key='_TABLE_', 
-        auto_size_columns=True,  justification='left',    
-        hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=True
-    )],
-    [sg.Text('the true column header row number, please use the ROW column(the first column)', size=(45,5)), sg.Input(key='_IN1_', enable_events=True)],
-    [sg.Text('Enter the delimiter visible, if any(eg: |, \\t, ;). If not visible please leave it blank', size=(45,2)), sg.Input(key='_IN2_', enable_events=True)],
-    [sg.Submit()]]
-    layout = [[sg.Frame('Input', frm_input_layout)]]
+def dm_type():
 
-    window = sg.Window(fn, auto_size_text=True, auto_size_buttons=True,
-                   grab_anywhere=True, resizable=False,
-                   layout=layout, finalize=True,size=(800, 600))
+    layout=[[sg.Text('Select the type of feature matrix that needs to be plotted')],
+    [sg.Listbox(values=['Type I', 'Type II', 'Type III'], default_values=['Type I',], select_mode='single', key='_TYPE_', size=(30, 3))],
+    [sg.Button('Confirm'), sg.Button('Cancel')]]
 
-    # Set real table width after here
-    window.TKroot.update()
-    tree = window['_TABLE_'].Widget
-    tkfont = Font(family=font_family, size=font_size)
-    data_array = np.array([header_list]+data)
-    column_widths = [max(map(lambda item:tkfont.measure(item), data_array[:, i]))
-    for i in range(data_array.shape[1])]
-    for heading, width in zip(header_list, column_widths):
-        tree.column(heading, width=width+font_size+20)
+    window=sg.window('Data Matrix Type', layout=layout)
 
-def dm_dash():
-	pass
+    while True:
+        event, values= window.read()
+        if event==sg.WIN_CLOSED or event=='Cancel':
+            break
+        if event=='Confirm':
+            window.close()
+            if values['_TYPE_'][0] is 'Type I':
+                return 1
+            if values['_TYPE_'][0] is 'Type II':
+                return 2
+    window.close()
+    return
+
+def type1(df, dat_col, features):
+    y_cols=df.columns[(int(dat_col)-1): df.shape[1]].tolist()
+    layout1=[[sg.Text('Choose the sensor for which the data matrix needs to be created')],
+    [sg.Listbox(values=y_cols, default_values=[y_cols[0],], select_mode='single', key='_SENSOR_', size=(30, 6))]]
+    
+
+    layout2=[[sg.Text('Choose the features for your Type I data matrix. Multiple features should be chosen(preferably all)')],
+    [sg.Text('Black means chosen and white means not chosen')],
+    [sg.Listbox(values=features, default_values=features, select_mode='multiple', key='_FEATURES_', size=(30, 6))]]
+
+    layout=[[sg.Frame('Sensor', layout=layout1)],
+    [sg.Frame('Features', layout=layout2)],
+    [sg.Button('Proceed to data matrix Type I computation'), sg.Cancel()]]
+
+    window=sg.window('Type I matrix parameters', layout=layout)
+
+    while True:
+        event, values= window.read()
+        if event==sg.WIN_CLOSED or event='Cancel':
+            break
+        if event=='Proceed to data matrix Type I computation':
+            window.close()
+            return (values['_SENSOR_'][0], values['_FEATURES_'])
+    window.close()
+    return
+
+def type2(df, dat_col, features):
+    layout1=[[sg.Text('Choose the feature for which the data matrix needs to be created')],
+    [sg.Listbox(values=features, default_values=[features[0],], select_mode='single', key='_FEATURE_', size=(30, 6))]]
+
+    y_cols=df.columns[(int(dat_col)-1): df.shape[1]].tolist()
+    
+    layout2=[[sg.Text('Choose the sensors for your Type II data matrix. Multiple features should be chosen(preferably all)')],
+    [sg.Text('Black means chosen and white means not chosen')],
+    [sg.Listbox(values=y_cols, default_values=y_cols, select_mode='multiple', key='_SENSORS_', size=(30, 6))]]
+
+    layout=[[sg.Frame('Feature', layout=layout1)],
+    [sg.Frame('Sensors', layout=layout2)],
+    [sg.Button('Proceed to data matrix Type II computation'), sg.Cancel()]]
+    
+    window=sg.window('Type II matrix parameters', layout=layout)
+
+    while True:
+        event, values= window.read()
+        if event==sg.WIN_CLOSED or event='Cancel':
+            break
+        if event=='Proceed to data matrix Type II computation':
+            window.close()
+            return (values['_FEATURE_'][0], values['_SENSORS_'])
+    window.close()
+    return
+
+
+def data_matrix_table():
+    pass    
+
+
+
+def data_matrix_landing(df, dat_col):
+    ##Explain what is type 1 matrix and what is type 2 matrix. Try embedding a picture for reference
+    ##Integrate landing page and dm_type() for better looks. Use data_matrix landing page to ask for poi input/ or whatever automation.
+    ##Option 1: ## call backend feature extraction method. (Figure this out)
+                ## Create and show data matric using above method
+                ## If user is satisfied return the created data matrix to final.py
+                ## If user wants to change matrix, call this landing page again and restart process.(These buttons in table method)
+    features=['Sensitivity', 'Selectivity', 'Response Time', 'Recovery Time', 'Integral Area']
+
+
 
 
 

@@ -250,6 +250,12 @@ def show_table_final(df,data_final, header_list_final ,fn):
     window.close()
     return
 
+
+
+
+"""
+The following function is to allow an user to directly upload their data matrix and skip the response curve visualization and feature extraction module of the program.
+"""
 def show_table_MVA(dm, data_mat_final, header_list_mat_final, fn):
     font_family, font_size = font = ('Helvetica', 10)
     sg.set_options(font=font)
@@ -267,8 +273,7 @@ def show_table_MVA(dm, data_mat_final, header_list_mat_final, fn):
     layout = [[sg.Frame('Input', frm_table_layout)],
     [sg.Frame('Type of matrix', layout=param)],
     [sg.Text('If you missed entering your delimiter, please restart the program', size=(50,1))], 
-    [sg.Text('Press submit to confirm the above dataframe for further computation', size=(50,1))],
-    [sg.Submit()]]
+    [sg.Button('Proceed to Multivariate Analysis')]]
 
     window = sg.Window(fn, auto_size_text=True, auto_size_buttons=True,
                    grab_anywhere=True, resizable=False,
@@ -289,7 +294,7 @@ def show_table_MVA(dm, data_mat_final, header_list_mat_final, fn):
         if event==sg.WIN_CLOSED:
             break
 
-        if event=='Submit':
+        if event=='Proceed to Multivariate Analysis':
             window.close()
             if values['_TYPE_'][0]=='Type I':
                 return (dm, 1, fn)
