@@ -266,13 +266,13 @@ def show_table_MVA(dm, data_mat_final, header_list_mat_final, fn):
         hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=False
     )]]
     
-    param=[[sg.Text('Confirm the type of matrix:', size=(50,5))], 
-    [sg.Listbox(values=['Type I', 'Type II'], default_values=['Type I',], select_mode='single', key='_TYPE_', size=(20, 2))]]
+    param=[[sg.Text('Confirm the type of matrix:')], 
+    [sg.Radio('Type I', "type", default=True, key='_TYPE_'),
+    sg.Radio('Type II', "type", default=False)]]
     
     
     layout = [[sg.Frame('Input', frm_table_layout)],
-    [sg.Frame('Type of matrix', layout=param)],
-    [sg.Text('If you missed entering your delimiter, please restart the program', size=(50,1))], 
+    [sg.Frame('Type of matrix', layout=param), sg.Text('If you missed entering your delimiter, please restart the program', size=(50,1))], 
     [sg.Button('Proceed to Multivariate Analysis')]]
 
     window = sg.Window(fn, auto_size_text=True, auto_size_buttons=True,
@@ -295,13 +295,14 @@ def show_table_MVA(dm, data_mat_final, header_list_mat_final, fn):
             break
 
         if event=='Proceed to Multivariate Analysis':
-            window.close()
-            if values['_TYPE_'][0]=='Type I':
-                sensor, conc=t1(dm)
-                return (dm, 1, fn, sensor)
-            elif values['_TYPE_'][0]=='Type II':
-                feature, conc=t2(dm)
+            if values['_TYPE_']==False:
+                feature=t2(dm)
+                window.close()
                 return (dm, 2, fn, feature)
+            else:
+                sensor_name=t1(dm)
+                window.close()
+                return (dm, 1, fn, sensor_name)
     window.close()
     return
 
@@ -314,12 +315,13 @@ def t1(dm):
     [sg.Text('Expected number of parameters are')],
     [sg.Input(key='_CONC_', enable_events=True)],
     [sg.Button('Plot feature and concentration')]]
+    return
 
 def t2(dm):
     features=['Sensitivity','Recovery Slope', 'Response Slope', 'Recovery Time', 'Response Time', 'Integral Area']
     layout=[
     [sg.Text('Choose the feature which has been tabulated in your uploaded Type II data matrix')],
-    [sg.Combo(values=features, default_value=features[0], key='_FEATURE_', size=(30, 6))],
+    [sg.Combo(values=features, default_value=features[0], key='_FEATURE_', size=(30, 6), readonly=True)],
     [sg.Button('Submit')]]
     window=sg.Window('Type II feature', layout=layout)
 
@@ -329,7 +331,7 @@ def t2(dm):
             break
         if event=='Submit':
             window.close()
-            return values['_FEATURE_'][0]
+            return values['_FEATURE_']
     window.close()
     return
 
@@ -353,7 +355,7 @@ def data_input():
 
         if event == sg.WIN_CLOSED or event == 'Exit':  # if all windows were closed
             break
-        if event == 'Upload response data':
+        elif event == 'Upload response data':
             data, header_list,fn, filename=read_table()
             show_prompt = sg.popup_yes_no('Process the sensor response data?')
             if show_prompt=='Yes':
@@ -364,19 +366,20 @@ def data_input():
                 return (df, data_final, header_list_final ,fn, t_col_no, dat_col)
             else:
                 break
-        if event=='Upload data matrix':
+        elif event=='Upload data matrix':
             data, header_list,fn, filename=read_table()
             show_prompt = sg.popup_yes_no('Process the feature matrix?')
             if show_prompt=='Yes':
                 home.close()
                 skiprow, delim, filename=show_table(data, header_list, fn, filename)
                 df, data_final, header_list_final, fn = read_table_final(skiprow, delim, filename)
-                dm, typemat, fn = show_table_MVA(df, data_final, header_list_final ,fn) 
-                return (dm, typemat, fn)
+                dm, typemat, fn, sens_name_or_feature = show_table_MVA(df, data_final, header_list_final ,fn) 
+                return (dm, typemat, fn, sens_name_or_feature)
             else:
                 break
 
     home.close()
+    return
 
 
 if __name__ == '__main__':

@@ -29,7 +29,7 @@ def dm_type():
 def type1(df, dat_col, features):
     y_cols=df.columns[(int(dat_col)-1): df.shape[1]].tolist()
     layout1=[[sg.Text('Choose the sensor for which the data matrix needs to be created')],
-    [sg.Combo(values=y_cols, default_value=y_cols[0], key='_SENSOR_', size=(30, 6))]]
+    [sg.Combo(values=y_cols, default_value=y_cols[0], key='_SENSOR_', size=(30, 6), readonly=True)]]
     
 
     layout2=[[sg.Text('Choose the features for your Type I data matrix. Multiple features should be chosen(preferably all)')],
@@ -54,7 +54,7 @@ def type1(df, dat_col, features):
 
 def type2(df, dat_col, features):
     layout1=[[sg.Text('Choose the feature for which the data matrix needs to be created')],
-    [sg.Combo(values=features, default_value=features[0], key='_FEATURE_', size=(30, 6))]]
+    [sg.Combo(values=features, default_value=features[0], key='_FEATURE_', size=(30, 6), readonly=True)]]
 
     y_cols=df.columns[(int(dat_col)-1): df.shape[1]].tolist()
     

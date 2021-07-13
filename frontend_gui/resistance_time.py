@@ -159,14 +159,14 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
     if t_col_no is 'X' or t_col_no is 'x' or t_col_no is '':
         layout2=[
         [sg.Text('Choose the X-axis columns. You can choose the timestamp column if available or the index column', size=(45,1))],
-        [sg.Combo(values=['Index',], default_value='Index', key='_XAXIS_', size=(30, 1))]]
+        [sg.Combo(values=['Index',], default_value='Index', key='_XAXIS_', size=(30, 1), readonly=True)]]
         t_col=df.index.values.tolist()
     else:
         t_col=df.iloc[:,(int(t_col_no)-1)]
         x_cols=['Index', df.columns[(int(t_col_no)-1)]] 
         layout2=[
         [sg.Text('Choose the X-axis columns. You can choose the timestamp column if available or the index column', size=(45,1))],
-        [sg.Combo(values=x_cols, default_value='Index', key='_XAXIS_', size=(30, 2))]]
+        [sg.Combo(values=x_cols, default_value='Index', key='_XAXIS_', size=(30, 2), readonly=True)]]
          
     
     
