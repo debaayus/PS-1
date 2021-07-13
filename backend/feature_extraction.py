@@ -106,7 +106,11 @@ def matrix_type1(df,poi,next,gap):
     rectime = recovery_time(sensor,poi,df,next,gap)
     area = integral_area(sensor,poi,df,points,gap)
     features = [[sens,recslope,resslope,restime,rectime,area]]
+<<<<<<< HEAD
     df1 = pd.DataFrame(features,columns=['Sensitivity','recovery slope','response slope','response time','recovery time','area'])
+=======
+    df1 = pd.DataFrame(features,columns=['Sensitivity','Recovery Slope', 'Response Slope', 'Recovery Time', 'Response Time', 'Integral Area'])
+>>>>>>> 957ef2ddfc85775ef6352bffec3e6344407c8705
     poi = poi+next
     while poi+next <= num_rows:
         sens = find_sensitivity(sensor,poi,df,next)
@@ -116,7 +120,11 @@ def matrix_type1(df,poi,next,gap):
         rectime = recovery_time(sensor,poi,df,next,gap)
         area = integral_area(sensor,poi,df,points,gap)
         features = [[sens,recslope,resslope,restime,rectime,area]]
+<<<<<<< HEAD
         df1 = df1.append(pd.DataFrame(features,columns=['Sensitivity','recovery slope','response slope','response time','recovery time','area']),ignore_index=True)
+=======
+        df1 = df1.append(pd.DataFrame(features,columns=['Sensitivity','Recovery Slope', 'Response Slope', 'Recovery Time', 'Response Time', 'Integral Area']),ignore_index=True)
+>>>>>>> 957ef2ddfc85775ef6352bffec3e6344407c8705
         poi =poi+next
     return df1
 

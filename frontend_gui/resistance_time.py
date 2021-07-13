@@ -159,14 +159,14 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
     if t_col_no is 'X' or t_col_no is 'x' or t_col_no is '':
         layout2=[
         [sg.Text('Choose the X-axis columns. You can choose the timestamp column if available or the index column', size=(45,1))],
-        [sg.Listbox(values=['Index',], default_values=['Index',], select_mode='single', key='_XAXIS_', size=(30, 1))]]
+        [sg.Combo(values=['Index',], default_value='Index', key='_XAXIS_', size=(30, 1), readonly=True)]]
         t_col=df.index.values.tolist()
     else:
         t_col=df.iloc[:,(int(t_col_no)-1)]
         x_cols=['Index', df.columns[(int(t_col_no)-1)]] 
         layout2=[
         [sg.Text('Choose the X-axis columns. You can choose the timestamp column if available or the index column', size=(45,1))],
-        [sg.Listbox(values=x_cols, default_values=['Index',], select_mode='single', key='_XAXIS_', size=(30, 2))]]
+        [sg.Combo(values=x_cols, default_value='Index', key='_XAXIS_', size=(30, 2), readonly=True)]]
          
     
     
@@ -190,14 +190,10 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
         if event==sg.WIN_CLOSED or event=='Exit':
             break
         if event=='Preview':
-            if v['_XAXIS_'][0] is 'Index':
+            if v['_XAXIS_'] is 'Index':
                 t_col=df.index.values.tolist()
             else:
-                if v['_XAXIS_'][0] is None:
-                    sg.popup_error('At least one x-axis column must be selected')
-                    continue
-                else:
-                    t_col=df.iloc[:,(int(t_col_no)-1)]
+                t_col=df.iloc[:,(int(t_col_no)-1)]
             if v['_DATA_'][0] is None:
                 sg.popup_error('At least one y-axis column must be selected')
                 continue
