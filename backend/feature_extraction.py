@@ -1,6 +1,7 @@
 import pandas as pd
 import sys 
 import numpy as np
+from scipy.integrate import simps
 
 def base_line(poi,ser1):
     baseline=0
@@ -56,14 +57,17 @@ def response_time(sensor,poi,df,next,gap):
     ser2=df.iloc[poi-1:poi+next-1,sensor]
     index_tip = tip(ser2,poi,next)
     delR = (baseline-ser2[index_tip])*0.90
-    """R90 = ser2[poi]-delR
-    index1= abs(ser2[poi]-R90)
+    R90 = ser2[poi] -delR
+    index1=poi
+    index1min = abs(ser2[poi]-R90)
     for i in range(poi,index_tip+1):
-        index1 = min(index1,abs(ser2[i]-R90))
-    index1 = index1 + poi -1
-    index2 = index1 -1
-    time = ((((R90-ser1[int(index2)])/(ser1[int(index1)]-ser1[int(index2)]))*(int(index1)*gap-int(index2)*gap))+int(index2)*gap)+poi*gap"""        
-    time = (delR/(ser1[poi]-ser1[index_tip])*(abs(index_tip-poi))*gap)
+        index1min = min(index1min,abs(ser2[i]-R90))
+        if index1min == abs(ser2[i]-R90):
+            index1 = i
+    index2 = index1-1
+    time1 = index1 * gap
+    time2 = index2 * gap
+    time = ((((R90-ser2[index2])/(ser2[index1]-ser2[index2]))*(time1-time2))+time2)-(poi*gap)
     return time
 
 def recovery_time(sensor,poi,df,next,gap):
@@ -72,8 +76,52 @@ def recovery_time(sensor,poi,df,next,gap):
     ser2=df.iloc[poi-1:poi+next-1,sensor]
     index_tip = tip(ser2,poi,next)
     delR = (baseline-ser2[index_tip])*0.90
-    time = (delR/(ser1[poi+next]-ser1[index_tip])*(abs(index_tip-poi+next))*gap)
+    R90 = ser2[index_tip]+delR
+    index1 = index_tip
+    index1min = abs(ser2[index_tip]-R90)
+    for i in range(index_tip,poi+next):
+        index1min = min(index1min,abs(ser2[i]-R90))
+        if index1min == abs(ser2[i]-R90):
+            index1 = i
+    index2 = index1-1
+    time1 = index1 * gap
+    time2 = index2 * gap
+    time = ((((R90-ser2[index2])/(ser2[index1]-ser2[index2]))*(time1-time2))+time2)-(index_tip*gap)
     return time
+
+def integral_area(sensor,poi,df,points,gap):
+    ser1 = df.iloc[poi:poi+points+1,sensor]
+    area = simps(ser1,dx=gap)
+    return area
+
+def matrix_type1(df,poi,next,gap):
+    num_rows = df.shape[0]
+    sensor = int(input('Enter the sensor number: '))
+    points = int(input('Enter the time in sec for which you have to calculate integral area: '))
+    points = points // gap
+    sens = find_sensitivity(sensor,poi,df,next)
+    recslope = recovery_slope(sensor,poi,df,next,gap)
+    resslope = response_slope(sensor,poi,df,next,gap)
+    restime = response_time(sensor,poi,df,next,gap)
+    rectime = recovery_time(sensor,poi,df,next,gap)
+    area = integral_area(sensor,poi,df,points,gap)
+    features = [[sens,recslope,resslope,restime,rectime,area]]
+    df1 = pd.DataFrame(features,columns=['Sensitivity','recovery slope','response slope','response time','recovery time','area'])
+    poi = poi+next
+    while poi+next <= num_rows:
+        sens = find_sensitivity(sensor,poi,df,next)
+        recslope = recovery_slope(sensor,poi,df,next,gap)
+        resslope = response_slope(sensor,poi,df,next,gap)
+        restime = response_time(sensor,poi,df,next,gap)
+        rectime = recovery_time(sensor,poi,df,next,gap)
+        area = integral_area(sensor,poi,df,points,gap)
+        features = [[sens,recslope,resslope,restime,rectime,area]]
+        df1 = df1.append(pd.DataFrame(features,columns=['Sensitivity','recovery slope','response slope','response time','recovery time','area']),ignore_index=True)
+        poi =poi+next
+    return df1
+        
+
+
 
 def df_creation():
     filename = sys.argv[1]
@@ -104,14 +152,14 @@ def main():
     poi=poi//gap
     next = int(input('Enter the gap between two consecutive poi (in sec): '))
     next=next//gap
-    sensor = int(input('Enter the sensor number: '))
-    print(find_sensitivity(sensor+1,poi,df,next))
+    """print(find_sensitivity(sensor+1,poi,df,next))
     print(response_slope(sensor+1,poi, df,next,gap))
     print(recovery_slope(sensor+1,poi, df,next,gap))
     print(response_time(sensor+1,poi, df,next,gap))
     print(recovery_time(sensor+1,poi, df,next,gap))
-
-
+    print(integral_area(sensor+1,poi, df,next,gap))"""
+    df1 = matrix_type1(df,poi,next,gap)
+    print(df1)
 
     
 
