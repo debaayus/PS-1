@@ -3,28 +3,11 @@ import pandas as pd
 import numpy as np
 from tkinter.font import Font
 from frontend_gui.saving_data import save_data_dash
+from frontend_gui.plotting import conc_feature_plot_dash_type1
+from frontend_gui.plotting import conc_feature_plot_dash_type2
+from frontend_gui.plotting import conc_feature_preview
 ##from backend import data matrix
 
-def dm_type():
-
-    layout=[[sg.Text('Select the type of feature matrix that needs to be plotted')],
-    [sg.Listbox(values=['Type I', 'Type II'], default_values=['Type I',], select_mode='single', key='_TYPE_', size=(30, 3))],
-    [sg.Button('Confirm'), sg.Button('Cancel')]]
-
-    window=sg.window('Data Matrix Type', layout=layout)
-
-    while True:
-        event, values= window.read()
-        if event==sg.WIN_CLOSED or event=='Cancel':
-            break
-        if event=='Confirm':
-            window.close()
-            if values['_TYPE_'][0] is 'Type I':
-                return 1
-            elif values['_TYPE_'][0] is 'Type II':
-                return 2
-    window.close()
-    return
 
 def type1(df, dat_col, features):
     y_cols=df.columns[(int(dat_col)-1): df.shape[1]].tolist()
@@ -78,9 +61,138 @@ def type2(df, dat_col, features):
     window.close()
     return
 
+def options(dm, flag, typemat):
+    if flag==0:
+        layout = [[sg.Button('View current data matrix')], [sg.Button('Change index column')], [sg.Button('Confirm data matrix for MVA')], [sg.Button('Concentration Plotting Dashboard')]]
+    elif flag==1:
+        layout = [[sg.Button('View current data matrix')], [sg.Button('Change index column')], [sg.Button('Confirm data matrix for MVA')], [sg.Button('Reset and create new data matrix')], [sg.Button('Add concentration data')]]
+    
+    window=sg.Window("Data matrix action dashboard", layout=layout)
+    
 
-def data_matrix_table():
-    pass    
+    while True:
+        event, values= window.read()
+        if event==sg.WIN_CLOSED:
+            break
+
+        elif event=='View current data matrix':
+            data_matrix_table(dm)
+            continue
+        elif event=='Change index column':
+            user_index=sg.popup_get_text('Enter the analyte/gas index separated by commas in a sequence. Expected number of arguments are {}'.format(dm.shape[0]))
+            if user_index is None:
+                continue
+            new_index=[x.strip() for x in user_index.split(',')]
+            if len(new_index) != dm.shape[0]:
+                sg.popup_error("Number of arguments does not match the shape of the data matrix")
+                continue
+            dm=dm.reset_index()
+            dm=dm.drop(dm.columns[0], axis=1)
+            dm=dm.set_index(new_index)
+            data_matrix_table(dm)
+            continue
+        elif event=='Confirm data matrix for MVA':
+            window.close()
+            return dm
+        elif event=='Concentration Plotting Dashboard':
+            if typemat==1:
+                conc_feature_plot_dash_type1(dm)
+            else:
+                conc_feature_plot_dash_type2(dm)
+        elif event=='Add concentration data':
+            dm= conc_append(dm)
+            data_matrix_table(dm)
+            prompt=sg.popup_yes_no('Do you wish to plot concentration and features?')
+            if prompt is 'Yes':
+                if typemat==1:
+                    conc_feature_plot_dash_type1(dm)
+                else:
+                    conc_feature_plot_dash_type2(dm)
+            continue
+        elif event=='Reset and create new data matrix':
+            return 0
+
+    window.close()
+    return
+
+
+
+
+def data_matrix_table(dm):
+    ## ask if they want to change index in the data matrix created
+    dm=dm.reset_index()
+    header_list = list(dm.columns)
+    data = dm[0:].values.tolist()
+    dm=dm.set_index(dm.columns[0])
+    
+    font_family, font_size = font = ('Helvetica', 10)
+    sg.set_options(font=font)
+    frm_table_layout = [
+    [sg.Table(values=data, headings=header_list,
+        enable_events=False, key='_TABLE_', 
+        auto_size_columns=True,  justification='left',    
+        hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=False
+    )]]
+    
+    
+    layout=[[sg.Frame('Input', frm_table_layout)],[sg.Text('Press OK to return to matrix actions')],[sg.Button('Save matrix in file format'), sg.Button('OK')]]
+
+
+    window = sg.Window("Data matrix", auto_size_text=True, auto_size_buttons=True,
+                   grab_anywhere=True, resizable=False,
+                   layout=layout, finalize=True)
+
+# Set real table width after here
+    window.TKroot.update()
+    tree = window['_TABLE_'].Widget
+    tkfont = Font(family=font_family, size=font_size)
+    data_array = np.array([header_list]+data)
+    column_widths = [max(map(lambda item:tkfont.measure(item), data_array[:, i]))
+    for i in range(data_array.shape[1])]
+    for heading, width in zip(header_list, column_widths):
+        tree.column(heading, width=width+font_size+20)
+
+    while True:
+        event, values= window.read()
+        if event==sg.WIN_CLOSED:
+            break
+        elif event=='Save matrix in file format':
+            save_data_dash(dm)
+            break
+        elif event=='OK':
+            break
+
+    window.close()
+    return 
+
+
+
+def conc_append(dm):
+    layout= [[sg.Text('If you wish to visualize concentration and a feature in a plot, please enter the following parameters', size=(50,2))],
+    [sg.Text('Enter the name of the concentration column to be appended', size=(50,1)), sg.Input(key='_COL_', enable_events=True)],
+    [sg.Text('Enter the location where the column must be appended. (eg. 0 for the first column after the index', size=(50,2)), sg.Input(key='_LOC_', enable_events=True)],
+    [sg.Text('Enter the concentration values in sequence separated by commas. The number of values entered must match the number of rows in your data matrix', size=(50,4))],
+    [sg.Text('Expected number of concentration entries are {}'.format(dm.shape[0]))],
+    [sg.Input(key='_CONC_', enable_events=True)],
+    [sg.Button('View modified data matrix')]]
+
+    window=sg.Window('Concentration data', layout=layout)
+    while True:
+        event, values=window.read()
+        if event==sg.WIN_CLOSED:
+            break
+        if event=='View modified data matrix':
+            conc1= [x.strip() for x in values['_CONC_'].split(',')]
+            conc=[float(i) for i in conc1]
+            if len(conc) != dm.shape[0]:
+                sg.popup_error("Number of arguments does not match the shape of the data matrix")
+                continue
+            else:
+                dm.insert(int(values['_LOC_']), values['_COL_'], conc)
+                return dm 
+    window.close()
+    return
+
 
 
 
@@ -88,10 +200,20 @@ def data_matrix_landing(df, dat_col):
     ##Explain what is type 1 matrix and what is type 2 matrix. Try embedding a picture for reference
     ##Integrate landing page and dm_type() for better looks. Use data_matrix landing page to ask for poi input/ or whatever automation.
     ##Option 1: ## call backend feature extraction method. (Figure this out)
-                ## Create and show data matric using above method
+                ## Create and show data matrix using above method
                 ## If user is satisfied return the created data matrix to final.py
                 ## If user wants to change matrix, call this landing page again and restart process.(These buttons in table method)
-    features=['Sensitivity','Recovery Slope', 'Response Slope', 'Recovery Time', 'Response Time', 'Integral Area']
+    features=['Response(in %)','Recovery Slope', 'Response Slope', 'Recovery Time', 'Response Time', 'Integral Area','Ratio']
+
+    param=[[sg.Text('Confirm the type of matrix:')], 
+    [sg.Radio('Type I', "type", default=True, key='_TYPE_'),
+    sg.Radio('Type II', "type", default=False)]]
+
+    flag=1
+
+    ##ask user for POI
+    ##ask user for gap between two data points
+    ##pass df, poi, gap to backend
 
 
 

@@ -2,6 +2,7 @@ import PySimpleGUI as sg
 import pandas as pd 
 import numpy as np
 from tkinter.font import Font
+from frontend_gui.data_matrix_viz import options
 
 
 
@@ -266,13 +267,19 @@ def show_table_MVA(dm, data_mat_final, header_list_mat_final, fn):
         hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=False
     )]]
     
-    param=[[sg.Text('Confirm the type of matrix:')], 
-    [sg.Radio('Type I', "type", default=True, key='_TYPE_'),
+    param=[[sg.Text('Confirm the type of matrix:'), 
+    sg.Radio('Type I', "type", default=True, key='_TYPE_'),
     sg.Radio('Type II', "type", default=False)]]
+    
+    indexlayout=[[sg.Text('Select YES if index column(analyte names, signal numbers or integers) of the data matrix is visible. Select NO to allow the program to create an index column', size=(50,6)), 
+    sg.Radio('Yes', "yesorno", default=True, key='_RAD_'),
+    sg.Radio('No', "yesorno", default=False)]]
     
     
     layout = [[sg.Frame('Input', frm_table_layout)],
-    [sg.Frame('Type of matrix', layout=param), sg.Text('If you missed entering your delimiter, please restart the program', size=(50,1))], 
+    [sg.Frame('Type of matrix', layout=param)], 
+    [sg.Frame('Index confirmation', layout=indexlayout)],
+    [sg.Text('If you missed entering your delimiter, please restart the program', size=(50,1))], 
     [sg.Button('Proceed to Multivariate Analysis')]]
 
     window = sg.Window(fn, auto_size_text=True, auto_size_buttons=True,
@@ -295,43 +302,113 @@ def show_table_MVA(dm, data_mat_final, header_list_mat_final, fn):
             break
 
         if event=='Proceed to Multivariate Analysis':
-            if values['_TYPE_']==False:
-                feature=t2(dm)
-                window.close()
-                return (dm, 2, fn, feature)
+            if values['_RAD_']==False:
+                try:                       ##this particular block works to add an index column and set it as the index column for the dataframe object
+                    dm.insert(0, column='index', value=[int(x) for x in range(1, (dm.shape[0]+1))])
+                    dm=dm.set_index(dm.columns[0])
+                    if values['_TYPE_']==False:
+                        window.close()
+                        dm, feature=t2(dm)
+                        return (dm, 2, feature)
+                    else:
+                        window.close()
+                        dm, sensor_name=t1(dm, fn)
+                        return (dm, 1, sensor_name)
+                except:
+                    sg.popup_error('Error in index insertion method. Click the error button to exit')
+                    break
             else:
-                sensor_name=t1(dm)
-                window.close()
-                return (dm, 1, fn, sensor_name)
+                dm=dm.set_index(dm.columns[0])
+                if values['_TYPE_']==False:
+                    window.close()
+                    dm, feature=t2(dm)
+                    return (dm, 2, feature)
+                else:
+                    window.close()
+                    dm, sensor_name=t1(dm, fn)
+                    return (dm, 1, sensor_name)
+
+            
     window.close()
     return
 
-def t1(dm):
-    layout=[[sg.popup_get_text('Enter the name of the sensor for your Type I matrix'), sg.Input(key='_SENSORNAME_', enable_events=True)],
+
+
+def t1(dm, fn):
+    layout1=[[sg.Text('Enter the name of the sensor for your Type I matrix'), sg.Input(key='_SENSORNAME_', default_text=fn, enable_events=True)],
     [sg.Button('Proceed directly to MVA')]]
     
-    layout2= [[sg.Text('If you wish to visualize concentration and a feature in a plot, please enter the following parameters')],
-    [sg.Text('Enter the concentration values in sequence separated by commas. The number of values entered must match the number of rows in your Type I matrix')],
-    [sg.Text('Expected number of parameters are')],
+    layout2= [[sg.Text('If you wish to visualize concentration and a feature in a plot, please enter the following parameters', size=(50,2))],
+    [sg.Text('Enter the name of the column to be appended', size=(50,1)), sg.Input(key='_COL_', enable_events=True)],
+    [sg.Text('Enter the location where the column must be appended. (eg. 0 for the first column after index', size=(50,2)), sg.Input(key='_LOC_', enable_events=True)],
+    [sg.Text('Enter the concentration values in sequence separated by commas. The number of values entered must match the number of rows in your Type I matrix', size=(50,4))],
+    [sg.Text('Expected number of concentration entries are {}'.format(dm.shape[0]))],
     [sg.Input(key='_CONC_', enable_events=True)],
-    [sg.Button('Plot feature and concentration')]]
+    [sg.Button('Data matrix action dashboard')]]
+    
+    layout=[[sg.Frame('MVA parameters(Mandatory)', layout=layout1)],
+    [sg.Frame('Visualization of concentration and features(Optional)', layout=layout2)]]
+
+    window=sg.Window('Type I matrix', layout=layout)
+    while True:
+        event, values=window.read()
+        if event==sg.WIN_CLOSED:
+            break
+        elif event=='Proceed directly to MVA':
+            window.close()
+            return (dm, values['_SENSORNAME_'])
+        elif event=='Data matrix action dashboard':
+            conc= float([x.strip() for x in values['_CONC_'].split(',')])
+            if len(conc) != dm.shape[0]:
+                sg.popup_error("Number of arguments does not match the shape of the data matrix")
+                continue
+            else:
+                window.close()
+                dm.insert(int(values['_LOC_']), values['_COL_'], conc)
+                dm=options(dm, 0, 1)
+                return (dm, values['_SENSORNAME_']) 
+    window.close()
     return
 
 def t2(dm):
-    features=['Sensitivity','Recovery Slope', 'Response Slope', 'Recovery Time', 'Response Time', 'Integral Area']
-    layout=[
+    features=['Response(in %)','Recovery Slope', 'Response Slope', 'Recovery Time', 'Response Time', 'Integral Area','Ratio']
+    layout1=[
     [sg.Text('Choose the feature which has been tabulated in your uploaded Type II data matrix')],
     [sg.Combo(values=features, default_value=features[0], key='_FEATURE_', size=(30, 6), readonly=True)],
-    [sg.Button('Submit')]]
-    window=sg.Window('Type II feature', layout=layout)
+    [sg.Button('Proceed directly to MVA')]]
+
+    layout2= [[sg.Text('If you wish to visualize concentration and a feature in a plot, please enter the following parameters', size=(50,2))],
+    [sg.Text('Enter the name of the column to be appended', size=(50,1)), sg.Input(key='_COL_', enable_events=True)],
+    [sg.Text('Enter the location where the column must be appended. (eg. 0 for the first column after index', size=(50,2)), sg.Input(key='_LOC_', enable_events=True)],
+    [sg.Text('Enter the concentration values in sequence separated by commas. The number of values entered must match the number of rows in your Type II matrix', size=(50,4))],
+    [sg.Text('Expected number of concentration entries are {}'.format(dm.shape[0]), size=(50,1)),
+    sg.Input(key='_CONC_', enable_events=True)],
+    [sg.Button('Data matrix action dashboard')]]
+    
+    layout=[[sg.Frame('MVA parameters(Mandatory)', layout=layout1)],
+    [sg.Frame('Visualization of concentration and features(Optional)', layout=layout2)]]
+
+
+    window=sg.Window('Type II matrix', layout=layout)
 
     while True:
         event, values=window.read()
         if event==sg.WIN_CLOSED:
             break
-        if event=='Submit':
+        elif event=='Proceed directly to MVA':
             window.close()
-            return values['_FEATURE_']
+            return (dm, values['_FEATURE_'])
+        elif event=='Data matrix action dashboard':
+            conc1= [x.strip() for x in values['_CONC_'].split(',')]
+            conc=[float(i) for i in conc1]
+            if len(conc) != dm.shape[0]:
+                sg.popup_error("Number of arguments does not match the shape of the data matrix")
+                continue
+            else:
+                window.close()
+                dm.insert(int(values['_LOC_']), values['_COL_'], conc)
+                dm=options(dm, 0, 2)
+                return (dm, values['_FEATURE_'])
     window.close()
     return
 
@@ -340,47 +417,3 @@ def t2(dm):
 
 
 
-
-
-
-"""
-This is the main function which controls the event loops and program sequence for the input part of the GUI.
-"""
-def data_input():
-    
-    home= landing_page()
-
-    while True:  # Event Loop
-        event, values = home.read()
-
-        if event == sg.WIN_CLOSED or event == 'Exit':  # if all windows were closed
-            break
-        elif event == 'Upload response data':
-            data, header_list,fn, filename=read_table()
-            show_prompt = sg.popup_yes_no('Process the sensor response data?')
-            if show_prompt=='Yes':
-                home.close()
-                skiprow, delim, filename=show_table(data, header_list, fn, filename)
-                df, data_final, header_list_final, fn = read_table_final(skiprow, delim, filename)
-                df, data_final, header_list_final, fn, t_col_no, dat_col = show_table_final(df,data_final, header_list_final ,fn) #any index updates if needed
-                return (df, data_final, header_list_final ,fn, t_col_no, dat_col)
-            else:
-                break
-        elif event=='Upload data matrix':
-            data, header_list,fn, filename=read_table()
-            show_prompt = sg.popup_yes_no('Process the feature matrix?')
-            if show_prompt=='Yes':
-                home.close()
-                skiprow, delim, filename=show_table(data, header_list, fn, filename)
-                df, data_final, header_list_final, fn = read_table_final(skiprow, delim, filename)
-                dm, typemat, fn, sens_name_or_feature = show_table_MVA(df, data_final, header_list_final ,fn) 
-                return (dm, typemat, fn, sens_name_or_feature)
-            else:
-                break
-
-    home.close()
-    return
-
-
-if __name__ == '__main__':
-    data_input()
