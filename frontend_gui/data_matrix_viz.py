@@ -8,7 +8,7 @@ from frontend_gui.saving_data import save_data_dash
 def dm_type():
 
     layout=[[sg.Text('Select the type of feature matrix that needs to be plotted')],
-    [sg.Listbox(values=['Type I', 'Type II', 'Type III'], default_values=['Type I',], select_mode='single', key='_TYPE_', size=(30, 3))],
+    [sg.Listbox(values=['Type I', 'Type II'], default_values=['Type I',], select_mode='single', key='_TYPE_', size=(30, 3))],
     [sg.Button('Confirm'), sg.Button('Cancel')]]
 
     window=sg.window('Data Matrix Type', layout=layout)
@@ -21,7 +21,7 @@ def dm_type():
             window.close()
             if values['_TYPE_'][0] is 'Type I':
                 return 1
-            if values['_TYPE_'][0] is 'Type II':
+            elif values['_TYPE_'][0] is 'Type II':
                 return 2
     window.close()
     return
@@ -29,7 +29,7 @@ def dm_type():
 def type1(df, dat_col, features):
     y_cols=df.columns[(int(dat_col)-1): df.shape[1]].tolist()
     layout1=[[sg.Text('Choose the sensor for which the data matrix needs to be created')],
-    [sg.Listbox(values=y_cols, default_values=[y_cols[0],], select_mode='single', key='_SENSOR_', size=(30, 6))]]
+    [sg.Combo(values=y_cols, default_value=y_cols[0], key='_SENSOR_', size=(30, 6))]]
     
 
     layout2=[[sg.Text('Choose the features for your Type I data matrix. Multiple features should be chosen(preferably all)')],
@@ -44,17 +44,17 @@ def type1(df, dat_col, features):
 
     while True:
         event, values= window.read()
-        if event==sg.WIN_CLOSED or event='Cancel':
+        if event==sg.WIN_CLOSED or event=='Cancel':
             break
         if event=='Proceed to data matrix Type I computation':
             window.close()
-            return (values['_SENSOR_'][0], values['_FEATURES_'])
+            return (values['_SENSOR_'], values['_FEATURES_'])
     window.close()
     return
 
 def type2(df, dat_col, features):
     layout1=[[sg.Text('Choose the feature for which the data matrix needs to be created')],
-    [sg.Listbox(values=features, default_values=[features[0],], select_mode='single', key='_FEATURE_', size=(30, 6))]]
+    [sg.Combo(values=features, default_value=features[0], key='_FEATURE_', size=(30, 6))]]
 
     y_cols=df.columns[(int(dat_col)-1): df.shape[1]].tolist()
     
@@ -70,11 +70,11 @@ def type2(df, dat_col, features):
 
     while True:
         event, values= window.read()
-        if event==sg.WIN_CLOSED or event='Cancel':
+        if event==sg.WIN_CLOSED or event=='Cancel':
             break
         if event=='Proceed to data matrix Type II computation':
             window.close()
-            return (values['_FEATURE_'][0], values['_SENSORS_'])
+            return (values['_FEATURE_'], values['_SENSORS_'])
     window.close()
     return
 
@@ -91,7 +91,7 @@ def data_matrix_landing(df, dat_col):
                 ## Create and show data matric using above method
                 ## If user is satisfied return the created data matrix to final.py
                 ## If user wants to change matrix, call this landing page again and restart process.(These buttons in table method)
-    features=['Sensitivity', 'Selectivity', 'Response Time', 'Recovery Time', 'Integral Area']
+    features=['Sensitivity','Recovery Slope', 'Response Slope', 'Recovery Time', 'Response Time', 'Integral Area']
 
 
 

@@ -267,7 +267,7 @@ def show_table_MVA(dm, data_mat_final, header_list_mat_final, fn):
     )]]
     
     param=[[sg.Text('Confirm the type of matrix:', size=(50,5))], 
-    [sg.Listbox(values=['Type I', 'Type II', 'Type III'], default_values=['Type I',], select_mode='single', key='_TYPE_', size=(30, 3))]]
+    [sg.Listbox(values=['Type I', 'Type II'], default_values=['Type I',], select_mode='single', key='_TYPE_', size=(20, 2))]]
     
     
     layout = [[sg.Frame('Input', frm_table_layout)],
@@ -297,11 +297,39 @@ def show_table_MVA(dm, data_mat_final, header_list_mat_final, fn):
         if event=='Proceed to Multivariate Analysis':
             window.close()
             if values['_TYPE_'][0]=='Type I':
-                return (dm, 1, fn)
+                sensor, conc=t1(dm)
+                return (dm, 1, fn, sensor)
             elif values['_TYPE_'][0]=='Type II':
-                return (dm, 2, fn)
-            else:
-                return (dm, 3, fn)
+                feature, conc=t2(dm)
+                return (dm, 2, fn, feature)
+    window.close()
+    return
+
+def t1(dm):
+    layout=[[sg.popup_get_text('Enter the name of the sensor for your Type I matrix'), sg.Input(key='_SENSORNAME_', enable_events=True)],
+    [sg.Button('Proceed directly to MVA')]]
+    
+    layout2= [[sg.Text('If you wish to visualize concentration and a feature in a plot, please enter the following parameters')],
+    [sg.Text('Enter the concentration values in sequence separated by commas. The number of values entered must match the number of rows in your Type I matrix')],
+    [sg.Text('Expected number of parameters are')],
+    [sg.Input(key='_CONC_', enable_events=True)],
+    [sg.Button('Plot feature and concentration')]]
+
+def t2(dm):
+    features=['Sensitivity','Recovery Slope', 'Response Slope', 'Recovery Time', 'Response Time', 'Integral Area']
+    layout=[
+    [sg.Text('Choose the feature which has been tabulated in your uploaded Type II data matrix')],
+    [sg.Combo(values=features, default_value=features[0], key='_FEATURE_', size=(30, 6))],
+    [sg.Button('Submit')]]
+    window=sg.Window('Type II feature', layout=layout)
+
+    while True:
+        event, values=window.read()
+        if event==sg.WIN_CLOSED:
+            break
+        if event=='Submit':
+            window.close()
+            return values['_FEATURE_'][0]
     window.close()
     return
 
