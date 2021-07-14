@@ -31,15 +31,15 @@ def response(df, t_col_no, dat_col):
     ax.set_title('Response Curve', fontweight='bold')
     ax.set_xlabel('Scan', fontweight ='bold')
     ax.set_ylabel('Resistance', fontweight='bold')
-    ax.legend(df.columns[(int(dat_col)-1): df.shape[1]], loc='best', prop={'size': 6})
+    ax.legend(df.columns[(int(dat_col)-1): df.shape[1]], loc='upper left', bbox_to_anchor=(1,1), prop={'size': 6})
 
 
 
 
     layout = [[sg.Text('Plot of Scan vs Resistance')],
               [sg.Canvas(key='-CANVAS-', 
-                         size=(600,300),
-                         pad=(15,15))],
+                         size=(600,400),
+                         pad=(5,10))],
               [sg.Button('Proceed to Feature Extraction'), sg.Button('Save Plot')],
               [sg.Text('Press "New Plot" to create customized plots with your choice of columns'), sg.Button('New Plot')]]
 
@@ -93,7 +93,7 @@ def preview_plot(df, width, height, title, xlabel, ylabel, legend, max_x_ticks, 
 
     if start is not False and end is not False:
         for col in y_col:
-            ax.plot(x_col[start:end], df.loc[start:end, col], linewidth=0.8)
+            ax.plot(x_col[start:(end+1)], df.loc[start:end, col], linewidth=0.8)
     else:
         for col in y_col:
             ax.plot(x_col, df.loc[:,col], linewidth=0.8)
@@ -103,7 +103,7 @@ def preview_plot(df, width, height, title, xlabel, ylabel, legend, max_x_ticks, 
     ax.set_xlabel(xlabel, fontweight ='bold')
     ax.set_ylabel(ylabel, fontweight='bold')
     if legend is True:
-        ax.legend(y_col, loc='best', prop={'size': 6})
+        ax.legend(y_col, loc='upper left', bbox_to_anchor=(1,1), prop={'size': 6})
     else:
         pass
     
@@ -112,7 +112,7 @@ def preview_plot(df, width, height, title, xlabel, ylabel, legend, max_x_ticks, 
     layout = [[sg.Text('Plot of Scan vs Resistance')],
               [sg.Canvas(key='-CANVAS-', 
                          size=(600,400),
-                         pad=(15,15))],
+                         pad=(5,10))],
               [sg.Text('Press exit preview to go back to the plotting dashboard. Press save to choose parameters for saving image'), sg.Button('Exit Preview'), sg.Button('Save')]]
 
 
@@ -225,8 +225,8 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
             else:
                 preview_plot(df, v['_WIDTH_'], v['_HEIGHT_'], v['_TITLE_'], 
                             v['_XLABEL_'], v['_YLABEL_'], v['_LEGEND_'], 
-                            v['_XTICKS_'], v['_YTICKS_'], t_col, v['_DATA_'], v['_SINDEX_'], V['_EINDEX_'])
-            break
+                            v['_XTICKS_'], v['_YTICKS_'], t_col, v['_DATA_'], int(v['_SINDEX_']), int(v['_EINDEX_']))
+            
 
     window.close()
     return
@@ -236,6 +236,8 @@ def conc_feature_plot_dash_type1(dm, fea_start):
     [sg.Text('Enter the title of the plot', size=(45,1)), sg.Input(default_text='Concentration vs Feature Plot', key='_TITLE_', enable_events=True)],
     [sg.Text('Enter the width of the plot (in inches)', size=(45,1)), sg.Input(default_text='8', key='_WIDTH_', enable_events=True)],
     [sg.Text('Enter the height of the plot (in inches)', size=(45,1)), sg.Input(default_text='5', key='_HEIGHT_', enable_events=True)],
+    [sg.Text('Enter the x-axis label of the plot', size=(45,1)), sg.Input(default_text='Concentration', key='_XLABEL_', enable_events=True)],
+    [sg.Text('Enter the y-axis label of the plot', size=(45,1)), sg.Input(default_text='Feature',key='_YLABEL_', enable_events=True)],
     [sg.Text('The pdf.fonttype used is type no 42 keeping in line with IEEE standards', size=(55,1))]]
 
     x_cols=[]
@@ -244,47 +246,213 @@ def conc_feature_plot_dash_type1(dm, fea_start):
     y_cols=[]
     y_cols=dm.columns[fea_start:].tolist()
     layout2=[
-        [sg.Text('Choose the X-axis column. Multiple concentration columns can be chosen if available', size=(45,1)), sg.Listbox(values=x_cols, default_values=[x_cols[0],], select_mode='multiple' key='_XAXIS_', size=(30, 1), readonly=True)],
+        [sg.Text('Choose the X-axis concentration column', size=(45,1)), sg.Combo(values=x_cols, default_value=x_cols[0], key='_XAXIS_', size=(30, 1), readonly=True)],
         [sg.Text('Choose the feature you want to plot against the concentration. Single feature can be chosen', size=(45,1)), sg.Combo(values=y_cols, default_value=y_cols[0], key='_FEATURE_', size=(30, 6), readonly=True)],
-        [sg.Text('Black means selected and white means not selected')],
         [sg.Button('Plot Feature(Y) vs Concentration(X)')]]
     
 
     layout3=[
         [sg.Text('Choose the feature column as X axis. Only one feature/X-axis column can be chosen', size=(45,1)), sg.Combo(values=y_cols, default_value=y_cols[0], key='_FEATUREREV_', size=(30, 1), readonly=True)],
-        [sg.Text('Choose the concentration columns to be plotted in the Y axis', size=(45,1)), sg.Listbox(values=x_cols, default_values=[x_cols[0],], select_mode='multiple', key='_XAXISREV_', size=(30, 6))],
-        [sg.Text('Black means selected and white means not selected')],
+        [sg.Text('Choose the concentration column to be plotted in the Y axis', size=(45,1)), sg.Combo(values=x_cols, default_value=x_cols[0], key='_XAXISREV_', size=(30, 6), readonly=True)],
         [sg.Button('Plot Concentration(Y) vs Feature(X)')]]
 
     layout=[[sg.Frame('Basic parameters', layout=layout1)],
     [sg.Frame('X-axis: Concentration and Y-axis: Feature', layout=layout2)],
     [sg.Frame('X-axis: Feature and Y-axis: Concentration', layout=layout3)],
     [sg.Text('Labels will be created as "index-concentration"')],
-    [sg.Text('Press exit to go back to the actions dashboard', sg.Button('Exit'))]]
+    [sg.Text('Press exit to go back to the actions dashboard'), sg.Button('Exit')]]
 
-    window=sg.Window("Type I matrix plotting dashboard")
+    window=sg.Window("Type I matrix plotting dashboard", layout=layout)
 
     while True:
-        e, v = window.Read()
-        if e==sg.WIN_CLOSED or e=='Exit'
+        event, v = window.Read()
+        if event==sg.WIN_CLOSED or event=='Exit':
             break
         elif event=='Plot Feature(Y) vs Concentration(X)':
-            conc_feature_preview_type1(dm, v['_WIDTH_'], v['_HEIGHT_'], v['_TITLE_'], v['_FEATURE_'], v['_XAXIS_'])
+            conc_feature_preview_type1(dm, v['_WIDTH_'], v['_HEIGHT_'], v['_TITLE_'], v['_XLABEL_'], v['_YLABEL_'], v['_XAXIS_'], v['_FEATURE_'], 0, 0)
         elif event=='Plot Concentration(Y) vs Feature(X)':
-            conc_feature_preview_type1(dm, v['_WIDTH_'], v['_HEIGHT_'], v['_TITLE_'], v['_FEATUREREV_'], v['_XAXISREV_'])
+            conc_feature_preview_type1(dm, v['_WIDTH_'], v['_HEIGHT_'], v['_TITLE_'], v['_XLABEL_'], v['_YLABEL_'], 0, 0, v['_FEATUREREV_'], v['_XAXISREV_'])
+    window.close()
+    return
 
 
   
     
 
-def conc_feature_plot_dash_type2(dm, conc):
-    pass
+def conc_feature_plot_dash_type2(dm, sens_start):
+    layout1=[
+    [sg.Text('Enter the title of the plot', size=(45,1)), sg.Input(default_text='Concentration vs Sensor Feature Plot', key='_TITLE_', enable_events=True)],
+    [sg.Text('Enter the width of the plot (in inches)', size=(45,1)), sg.Input(default_text='8', key='_WIDTH_', enable_events=True)],
+    [sg.Text('Enter the height of the plot (in inches)', size=(45,1)), sg.Input(default_text='5', key='_HEIGHT_', enable_events=True)],
+    [sg.Text('Enter the x-axis label of the plot', size=(45,1)), sg.Input(default_text='Concentration', key='_XLABEL_', enable_events=True)],
+    [sg.Text('Enter the y-axis label of the plot', size=(45,1)), sg.Input(default_text='Sensor Feature',key='_YLABEL_', enable_events=True)],
+    [sg.Text('The pdf.fonttype used is type no 42 keeping in line with IEEE standards', size=(55,1))]]
 
-def conc_feature_preview_type1():
-    pass
+    x_cols=[]
+    x_cols=dm.columns[0:sens_start].tolist()
+    
+    y_cols=[]
+    y_cols=dm.columns[sens_start:].tolist()
+    layout2=[
+        [sg.Text('Choose the X-axis concentration column', size=(45,1)), sg.Combo(values=x_cols, default_value=x_cols[0], key='_XAXIS_', size=(30, 1), readonly=True)],
+        [sg.Text('Choose the sensors for which you want to plot the feature against the concentration Y-axis', size=(45,2)), sg.Listbox(values=y_cols, default_values=[y_cols[0],], select_mode='multiple', key='_FEATURE_', size=(30, 6))],
+        [sg.Button('Plot Sensor Feature(Y) vs Concentration(X)')]]
+    
 
-def conc_feature_preview_type2():
-    pass
+
+
+    layout=[[sg.Frame('Basic parameters', layout=layout1)],
+    [sg.Frame('X-axis: Concentration and Y-axis: Sensor feature', layout=layout2)],
+    [sg.Text('Labels will be created by sensor names')],
+    [sg.Text('Press exit to go back to the actions dashboard'), sg.Button('Exit')]]
+
+    window=sg.Window("Type II matrix plotting dashboard", layout=layout)
+
+    while True:
+        event, v = window.Read()
+        if event==sg.WIN_CLOSED or event=='Exit':
+            break
+        elif event=='Plot Sensor Feature(Y) vs Concentration(X)':
+            conc_feature_preview_type2(dm, v['_WIDTH_'], v['_HEIGHT_'], v['_TITLE_'], v['_XLABEL_'], v['_YLABEL_'], v['_XAXIS_'], v['_FEATURE_'])
+    window.close()
+    return
+
+
+
+
+def conc_feature_preview_type1(dm, width, height, title, xlabel, ylabel, concX, featureY, featureX, concY):
+    fig_size=(float(width), float(height))
+
+
+    """Figure creation using matplotlib"""
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams['ps.fonttype'] = 42
+    mpl.rcParams['font.family'] = 'Arial'
+
+    fig = plt.figure(figsize=fig_size)
+    ax = fig.add_subplot(111)
+
+    if concY==0 and featureX==0:
+        
+        label=[]
+        index_val=[str(x) for x in dm.index.values.tolist()]
+        conc_val=[str(x) for x in dm.loc[:, concX].tolist()]
+        label=[a + "_" + b for a, b in zip(index_val, conc_val )]
+        ax.scatter(dm.loc[:, concX], dm.loc[:,featureY], alpha=0.8)
+        ax.legend(labels=label, loc='upper left', bbox_to_anchor=(1,1))
+        
+    elif concX==0 and featureY==0:
+        label=[]
+        index_val=[str(x) for x in dm.index.values.tolist()]
+        conc_val=[str(x) for x in dm.loc[:, concY].tolist()]
+        label=[a +"_"+ b for a, b in zip(index_val, conc_val)]
+        ax.scatter(dm.loc[:,featureX], dm.loc[:, concY], alpha=0.8)
+        ax.legend(labels=label, loc='upper left', bbox_to_anchor=(1,1))
+
+    
+
+
+    ax.grid()
+    ax.set_title(title , fontweight='bold')
+    ax.set_xlabel(xlabel, fontweight ='bold')
+    ax.set_ylabel(ylabel, fontweight='bold')
+
+
+    layout = [[sg.Text('Plot of Concentraion and Feature')],
+              [sg.Canvas(key='-CANVAS-', 
+                         size=(600,400),
+                         pad=(5,10))],
+              [sg.Text('Press exit preview to go back to the plotting dashboard. Press save to choose parameters for saving image'), sg.Button('Exit Preview'), sg.Button('Save')]]
+
+
+    window = sg.Window('Plot', 
+                       layout,
+                       size=(900,700),
+                       finalize=True, 
+                       element_justification='center', 
+                       font='Helvetica 10')
+
+    # add the plot to the window
+    fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
+
+    while True:
+        event, values = window.read()
+        if event is sg.WIN_CLOSED:
+            break
+        if event is 'Exit Preview':            
+            break
+        if event is 'Save':
+            save_plot_dashboard(fig)
+            window.close()
+            return
+
+
+
+    window.close()
+    return
+
+
+
+def conc_feature_preview_type2(dm, width, height, title, xlabel, ylabel, concX, sensorsY):
+    fig_size=(float(width), float(height))
+
+
+    """Figure creation using matplotlib"""
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams['ps.fonttype'] = 42
+    mpl.rcParams['font.family'] = 'Arial'
+
+    fig = plt.figure(figsize=fig_size)
+    ax = fig.add_subplot(111)
+
+    
+    for val in sensorsY:
+        ax.scatter(dm.loc[:, concX], dm.loc[:,val], label=val, alpha=0.8)
+        ax.legend(loc='upper left', bbox_to_anchor=(1,1))
+        
+
+    
+
+
+    ax.grid()
+    ax.set_title(title , fontweight='bold')
+    ax.set_xlabel(xlabel, fontweight ='bold')
+    ax.set_ylabel(ylabel, fontweight='bold')
+
+
+    layout = [[sg.Text('Plot of Concentraion and Sensor Feature')],
+              [sg.Canvas(key='-CANVAS-', 
+                         size=(600,400),
+                         pad=(5,10))],
+              [sg.Text('Press exit preview to go back to the plotting dashboard. Press save to choose parameters for saving image'), sg.Button('Exit Preview'), sg.Button('Save')]]
+
+
+    window = sg.Window('Plot', 
+                       layout,
+                       size=(900,700),
+                       finalize=True, 
+                       element_justification='center', 
+                       font='Helvetica 10')
+
+    # add the plot to the window
+    fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
+
+    while True:
+        event, values = window.read()
+        if event is sg.WIN_CLOSED:
+            break
+        if event is 'Exit Preview':            
+            break
+        if event is 'Save':
+            save_plot_dashboard(fig)
+            window.close()
+            return
+
+
+
+    window.close()
+    return
+    
 
 
 

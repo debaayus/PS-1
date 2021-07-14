@@ -5,7 +5,6 @@ from tkinter.font import Font
 from frontend_gui.saving_data import save_data_dash
 from frontend_gui.plotting import conc_feature_plot_dash_type1
 from frontend_gui.plotting import conc_feature_plot_dash_type2
-from frontend_gui.plotting import conc_feature_preview
 ##from backend import data matrix
 
 
@@ -82,13 +81,13 @@ def options(dm, flag, typemat):
             user_index=sg.popup_get_text('Enter the analyte/gas index separated by commas in a sequence. Expected number of arguments are {}'.format(dm.shape[0]))
             if user_index is None:
                 continue
-            new_index=[x.strip() for x in user_index.split(',')]
+            new_index=np.array([x.strip() for x in user_index.split(',')])
             if len(new_index) != dm.shape[0]:
                 sg.popup_error("Number of arguments does not match the shape of the data matrix")
                 continue
             dm=dm.reset_index()
             dm=dm.drop(dm.columns[0], axis=1)
-            dm=dm.set_index(new_index)
+            dm=dm.set_index(new_index, "index")
             data_matrix_table(dm)
             continue
         elif event=='Confirm data matrix for MVA':
@@ -96,21 +95,36 @@ def options(dm, flag, typemat):
             return dm
         elif event=='Concentration Plotting Dashboard':
             if typemat==1:
-                fea_start=sg.popup_get_text('Enter the column number of the first feature column(eg. 3 for the third column)')
-                conc_feature_plot_dash_type1(dm, int(fea_start)-2)
+                try:
+                    fea_start=sg.popup_get_text('Enter the column number of the first feature column(eg. 3 for the third column)')
+                    conc_feature_plot_dash_type1(dm, int(fea_start)-2)
+                except TypeError:
+                    continue
             else:
-                conc_feature_plot_dash_type2(dm)
+                try:
+                    sensor_start=sg.popup_get_text('Enter the column number of the first sensor column(Minimum value=3 as index and concentration columns must preceed feature columns)')
+                    conc_feature_plot_dash_type2(dm, int(sensor_start)-2)
+                except TypeError:
+                    continue
         elif event=='Add concentration data':
             dm= conc_append(dm)
             data_matrix_table(dm)
             prompt=sg.popup_yes_no('Do you wish to plot concentration and features?')
             if prompt is 'Yes':
                 if typemat==1:
-                    fea_start=sg.popup_get_text('Enter the column number of the first feature column(Minimum value=3 as index and concentration columns must preceed feature columns)')
-                    conc_feature_plot_dash_type1(dm, int(fea_start)-2)
+                    try:
+                        fea_start=sg.popup_get_text('Enter the column number of the first feature column(Minimum value=3 as index and concentration columns must preceed feature columns)')
+                        conc_feature_plot_dash_type1(dm, int(fea_start)-2)
+                    except TypeError:
+                        continue
                 else:
-                    conc_feature_plot_dash_type2(dm)
-            continue
+                    try:
+                        sensor_start=sg.popup_get_text('Enter the column number of the first sensor column(Minimum value=3 as index and concentration columns must preceed feature columns)')
+                        conc_feature_plot_dash_type2(dm, int(sensor_start)-2)
+                    except TypeError:
+                        continue
+            else:
+                continue
         elif event=='Reset and create new data matrix':
             return 0
 
