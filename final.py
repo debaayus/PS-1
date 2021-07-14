@@ -1,5 +1,5 @@
 from frontend_gui import in_dat
-from frontend_gui import resistance_time
+from frontend_gui import plotting
 from frontend_gui import data_matrix_viz
 import PySimpleGUI as sg
 
@@ -35,7 +35,7 @@ def foo():
                 home.close()
                 skiprow, delim, filename=in_dat.show_table(data, header_list, fn, filename)
                 df, data_final, header_list_final, fn = in_dat.read_table_final(skiprow, delim, filename)
-                dm, typemat, fn, sens_name_or_feature = in_dat.show_table_MVA(df, data_final, header_list_final ,fn) 
+                dm, typemat, sens_name_or_feature = in_dat.show_table_MVA(df, data_final, header_list_final ,fn) 
                 flag=2
                 break
             else:
@@ -46,7 +46,7 @@ def foo():
 
     
     if flag==1:
-        resistance_time.response(df, t_col_no, dat_col)
+        plotting.response(df, t_col_no, dat_col)
         #while True:
             #data_matrix_viz.data_matrix_landing(df, dat_col)
             

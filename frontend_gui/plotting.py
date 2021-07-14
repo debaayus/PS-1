@@ -1,9 +1,9 @@
+import PySimpleGUI as sg
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.ticker import MultipleLocator,FormatStrFormatter,MaxNLocator
-import PySimpleGUI as sg
 from frontend_gui.plotting_utils import draw_figure, draw_figure_w_toolbar, Toolbar
 from frontend_gui.saving_plot import save_plot_dashboard
 
@@ -208,7 +208,14 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
     window.close()
     return
 
+def conc_feature_plot_dash_type1(dm, conc):
+    pass
 
+def conc_feature_plot_dash_type2(dm, conc):
+    pass
+
+def conc_feature_preview():
+    pass
 
 
 
