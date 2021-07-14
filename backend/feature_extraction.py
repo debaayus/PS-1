@@ -94,13 +94,18 @@ def integral_area(sensor,poi,df,points,gap):
     area = simps(ser1,dx=gap)
     return area
 
-def matrix_type1(df,num_poi,list_poi,gap,points,sensor):
+def matrix_type1(df,list_poi,gap,points,sensor):
+    num_poi=len(list_poi)
+    list_poi.sort(reverse=False)
     num_rows = df.shape[0]
     """sensor = int(input('Enter the sensor column number: '))
     points = int(input('Enter the time in sec for which you have to calculate integral area: '))"""
     points = points // gap
     poi = list_poi[0]//gap
-    next = (list_poi[1]-list_poi[0])//gap
+    if num_poi==1:
+        next = num_rows-((list_poi[0])//gap)
+    else:
+        next = (list_poi[1]-list_poi[0])//gap
     sens = find_sensitivity(sensor,poi,df,next)
     recslope = recovery_slope(sensor,poi,df,next,gap)
     resslope = response_slope(sensor,poi,df,next,gap)
@@ -116,7 +121,7 @@ def matrix_type1(df,num_poi,list_poi,gap,points,sensor):
         if i+1==num_poi:
             next = num_rows-((list_poi[i])//gap)
         else:
-            next = (list_poi[i+1]-list_poi[i])//gap 
+            next = (list_poi[i+1]-list_poi[i])//gap
         sens = find_sensitivity(sensor,poi,df,next)
         recslope = recovery_slope(sensor,poi,df,next,gap)
         resslope = response_slope(sensor,poi,df,next,gap)
@@ -127,60 +132,106 @@ def matrix_type1(df,num_poi,list_poi,gap,points,sensor):
         sens *= 100
         features = [[sens,recslope,resslope,restime,rectime,area,Ratio]]
         df1 = df1.append(pd.DataFrame(features,columns=['Response(in %)','Recovery Slope', 'Response Slope', 'Recovery Time', 'Response Time', 'Integral Area','Ratio']),ignore_index=True)
+    index_col = []
+    for i in range (1,num_poi+1):
+        index_col.append('Signal '+str(i))
+    df1.insert(loc=0,column='Signal',value=index_col)
+    df1.set_index("Signal",inplace=True)
     return df1
 
-def matrix_type2(feature,df,poi,next,gap):
+def matrix_type2(feature,df,list_poi,gap,total_sensor,start):
     num_rows=df.shape[0]
-    total_sensor = int(input('Enter the total number of sensors:'))
-    start = int(input('Enter the starting column number: '))
+    num_poi=len(list_poi)
+    """total_sensor = int(input('Enter the total number of sensors:'))
+    start = int(input('Enter the starting column number: '))"""
     column_name = []
     for i in range (1,1+total_sensor):
-        column_name.append(i)
+        column_name.append('Sensor '+str(i))
     df1 = pd.DataFrame(columns=column_name)
     if feature==1:
-        while poi+next<=num_rows:
+        for i in range(num_poi):
+            poi = list_poi[i]//gap
+            if i+1==num_poi:
+                next = num_rows-((list_poi[i])//gap)
+            else:
+                next = (list_poi[i+1]-list_poi[i])//gap
             sens=[]
             for i in range (start,start+total_sensor):
-                sens.append(find_sensitivity(i,poi,df,next))
+                sens.append(find_sensitivity(i,poi,df,next)*100)
             df1=df1.append(pd.DataFrame([sens],columns=column_name),ignore_index=True)
-            poi=poi+next
     elif feature==2:
-        while poi+next<=num_rows:
+        for i in range(num_poi):
+            poi = list_poi[i]//gap
+            if i+1==num_poi:
+                next = num_rows-((list_poi[i])//gap)
+            else:
+                next = (list_poi[i+1]-list_poi[i])//gap
             sens=[]
             for i in range (start,start+total_sensor):
                 sens.append(response_slope(i,poi,df,next,gap))
             df1=df1.append(pd.DataFrame([sens],columns=column_name),ignore_index=True)
-            poi=poi+next
     elif feature==3:
-        while poi+next<=num_rows:
+        for i in range(num_poi):
+            poi = list_poi[i]//gap
+            if i+1==num_poi:
+                next = num_rows-((list_poi[i])//gap)
+            else:
+                next = (list_poi[i+1]-list_poi[i])//gap
             sens=[]
             for i in range (start,start+total_sensor):
                 sens.append(recovery_slope(i,poi,df,next,gap))
             df1=df1.append(pd.DataFrame([sens],columns=column_name),ignore_index=True)
-            poi=poi+next
     elif feature==4:
-        while poi+next<=num_rows:
+        for i in range(num_poi):
+            poi = list_poi[i]//gap
+            if i+1==num_poi:
+                next = num_rows-((list_poi[i])//gap)
+            else:
+                next = (list_poi[i+1]-list_poi[i])//gap
             sens=[]
             for i in range (start,start+total_sensor):
                 sens.append(response_time(i,poi,df,next,gap))
             df1=df1.append(pd.DataFrame([sens],columns=column_name),ignore_index=True)
-            poi=poi+next
     elif feature==5:
-        while poi+next<=num_rows:
+        for i in range(num_poi):
+            poi = list_poi[i]//gap
+            if i+1==num_poi:
+                next = num_rows-((list_poi[i])//gap)
+            else:
+                next = (list_poi[i+1]-list_poi[i])//gap
             sens=[]
             for i in range (start,start+total_sensor):
                 sens.append(recovery_time(i,poi,df,next,gap))
             df1=df1.append(pd.DataFrame([sens],columns=column_name),ignore_index=True)
-            poi=poi+next
     elif feature==6:
         points = int(input('Enter the time in sec for which you have to calculate integral area: '))
         points = points // gap
-        while poi+next<=num_rows:
+        for i in range(num_poi):
+            poi = list_poi[i]//gap
+            if i+1==num_poi:
+                next = num_rows-((list_poi[i])//gap)
+            else:
+                next = (list_poi[i+1]-list_poi[i])//gap
             sens=[]
             for i in range (start,start+total_sensor):
                 sens.append(integral_area(i,poi,df,points,gap))
             df1=df1.append(pd.DataFrame([sens],columns=column_name),ignore_index=True)
-            poi=poi+next
+    elif feature==7:
+        for i in range(num_poi):
+            poi = list_poi[i]//gap
+            if i+1==num_poi:
+                next = num_rows-((list_poi[i])//gap)
+            else:
+                next = (list_poi[i+1]-list_poi[i])//gap
+            sens=[]
+            for i in range (start,start+total_sensor):
+                sens.append(1-find_sensitivity(i,poi,df,next))
+            df1=df1.append(pd.DataFrame([sens],columns=column_name),ignore_index=True)
+    index_col = []
+    for i in range (1,num_poi+1):
+        index_col.append('Signal '+str(i))
+    df1.insert(loc=0,column='Signal',value=index_col)
+    df1.set_index("Signal",inplace=True)
     return df1
         
 def df_creation():
@@ -216,12 +267,12 @@ def main():
     print(response_time(sensor+1,poi, df,next,gap))
     print(recovery_time(sensor+1,poi, df,next,gap))
     print(integral_area(sensor+1,poi, df,next,gap))"""
-    type = int(input('enter the type of matrix you want(1/2): '))
-    if type == 1:
-        df1 = matrix_type1(df,num_poi,poi,gap,60,1)
-    elif type==2:
-        feature = int(input("Enter the feature number(1-sensitivity  2-response slope  3-recovery slope  4-response time  5-recovery time  6-integral area): "))
-        df1 = matrix_type2(feature,df,poi,next,gap)
+    mtype = int(input('enter the type of matrix you want(1/2): '))
+    if mtype == 1:
+        df1 = matrix_type1(df,poi,gap,60,1)
+    elif mtype==2:
+        feature = int(input("Enter the feature number(1-Response(in %)  2-response slope  3-recovery slope  4-response time  5-recovery time  6-integral area 7-Ratio): "))
+        df1 = matrix_type2(feature,df,poi,gap,8,1)
     print(df1)
     
 
