@@ -96,7 +96,8 @@ def options(dm, flag, typemat):
             return dm
         elif event=='Concentration Plotting Dashboard':
             if typemat==1:
-                conc_feature_plot_dash_type1(dm)
+                fea_start=sg.popup_get_text('Enter the column number of the first feature column(eg. 3 for the third column)')
+                conc_feature_plot_dash_type1(dm, int(fea_start)-2)
             else:
                 conc_feature_plot_dash_type2(dm)
         elif event=='Add concentration data':
@@ -105,7 +106,8 @@ def options(dm, flag, typemat):
             prompt=sg.popup_yes_no('Do you wish to plot concentration and features?')
             if prompt is 'Yes':
                 if typemat==1:
-                    conc_feature_plot_dash_type1(dm)
+                    fea_start=sg.popup_get_text('Enter the column number of the first feature column(Minimum value=3 as index and concentration columns must preceed feature columns)')
+                    conc_feature_plot_dash_type1(dm, int(fea_start)-2)
                 else:
                     conc_feature_plot_dash_type2(dm)
             continue
@@ -169,8 +171,7 @@ def data_matrix_table(dm):
 
 def conc_append(dm):
     layout= [[sg.Text('If you wish to visualize concentration and a feature in a plot, please enter the following parameters', size=(50,2))],
-    [sg.Text('Enter the name of the concentration column to be appended', size=(50,1)), sg.Input(key='_COL_', enable_events=True)],
-    [sg.Text('Enter the location where the column must be appended. (eg. 0 for the first column after the index', size=(50,2)), sg.Input(key='_LOC_', enable_events=True)],
+    [sg.Text('Enter the name of the concentration column to be inserted', size=(50,1)), sg.Input(key='_COL_', enable_events=True)],
     [sg.Text('Enter the concentration values in sequence separated by commas. The number of values entered must match the number of rows in your data matrix', size=(50,4))],
     [sg.Text('Expected number of concentration entries are {}'.format(dm.shape[0]))],
     [sg.Input(key='_CONC_', enable_events=True)],
@@ -188,7 +189,7 @@ def conc_append(dm):
                 sg.popup_error("Number of arguments does not match the shape of the data matrix")
                 continue
             else:
-                dm.insert(int(values['_LOC_']), values['_COL_'], conc)
+                dm.insert(0, values['_COL_'], conc)
                 return dm 
     window.close()
     return
