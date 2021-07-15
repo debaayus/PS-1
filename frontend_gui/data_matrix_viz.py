@@ -151,7 +151,8 @@ def options(dm, flag, typemat):
                 continue
         elif event=='Reset and create new data matrix':
             window.close()
-            return 0
+            dm=pd.DataFrame()
+            return dm
 
     window.close()
     return
@@ -278,9 +279,9 @@ def data_matrix_landing(df, dat_col):
             gap=int(values['_GAP_'])
             if values['_TYPE_'] is False:
                 ##code for Type 2
-                dm=pd.DataFrame()
+                
                 feature, time=type2(df, dat_col, features)
-                dm=feature_extraction.matrix_type2(feature,df,poi_list,gap, int(values['_TOTALSENSORS_']),dat_col, time)
+                dm=feature_extraction.matrix_type2(feature, df, poi_list, gap, int(values['_TOTALSENSORS_']), dat_col, time)
 
                 ##feature extraction method which returns a data matrix with correct indexing and columns [ dm=xyz(params) ] 
                 ##available parameters for type 2: poi_list(list of strings), gap(integer in seconds), sensors(list of strings)
@@ -288,14 +289,14 @@ def data_matrix_landing(df, dat_col):
                 ##                                 type of matrix can directly be passed to the parameter list 
                 
                 dm=options(dm, flag, 2)
-                if dm==0:
+                if dm.empty:
                     continue
                 else:
                     window.close()
                     return dm
             elif values['_TYPE_'] is True:
                 ##Code for type 1
-                dm=pd.DataFrame()
+                
                 sensor, time=type1(df, dat_col)
                 dm=feature_extraction.matrix_type1(df, poi_list, gap, time, sensor)
                 
@@ -305,7 +306,7 @@ def data_matrix_landing(df, dat_col):
                 ##                                 type of matrix can directly be passed to the parameter list
                 
                 dm=options(dm, flag, 1)
-                if dm==0:
+                if dm.empty:
                     continue
                 else:
                     window.close()

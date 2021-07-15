@@ -141,15 +141,15 @@ def matrix_type1(df,list_poi,gap,points,sensor_name):
     df1.set_index("Signal",inplace=True)
     return df1
 
-def matrix_type2(feature,df,list_poi,gap,total_sensor,dat_col, points):
+def matrix_type2(feature,df,list_poi,gap,total_sensor, dat_col, points):
     num_rows=df.shape[0]
     num_poi=len(list_poi)
     """total_sensor = int(input('Enter the total number of sensors:'))
     start = int(input('Enter the starting column number: '))"""
     start=int(dat_col)-1
-    column_name = df.columns[start: df.shape[1]].tolist()
+    column_name = df.columns[start: start+total_sensor].tolist()
     df1 = pd.DataFrame(columns=column_name)
-    if feature is 'Response(in %)':
+    if feature=='Response(in %)':
         for i in range(num_poi):
             poi = list_poi[i]//gap
             if i+1==num_poi:
@@ -160,7 +160,7 @@ def matrix_type2(feature,df,list_poi,gap,total_sensor,dat_col, points):
             for i in range (start,start+total_sensor):
                 sens.append(find_sensitivity(i,poi,df,next)*100)
             df1=df1.append(pd.DataFrame([sens],columns=column_name),ignore_index=True)
-    elif feature is 'Recovery Slope':
+    elif feature=='Recovery Slope':
         for i in range(num_poi):
             poi = list_poi[i]//gap
             if i+1==num_poi:
@@ -171,7 +171,7 @@ def matrix_type2(feature,df,list_poi,gap,total_sensor,dat_col, points):
             for i in range (start,start+total_sensor):
                 sens.append(response_slope(i,poi,df,next,gap))
             df1=df1.append(pd.DataFrame([sens],columns=column_name),ignore_index=True)
-    elif feature is 'Response Slope':
+    elif feature=='Response Slope':
         for i in range(num_poi):
             poi = list_poi[i]//gap
             if i+1==num_poi:
@@ -182,7 +182,7 @@ def matrix_type2(feature,df,list_poi,gap,total_sensor,dat_col, points):
             for i in range (start,start+total_sensor):
                 sens.append(recovery_slope(i,poi,df,next,gap))
             df1=df1.append(pd.DataFrame([sens],columns=column_name),ignore_index=True)
-    elif feature is 'Recovery Time':
+    elif feature=='Recovery Time':
         for i in range(num_poi):
             poi = list_poi[i]//gap
             if i+1==num_poi:
@@ -193,7 +193,7 @@ def matrix_type2(feature,df,list_poi,gap,total_sensor,dat_col, points):
             for i in range (start,start+total_sensor):
                 sens.append(response_time(i,poi,df,next,gap))
             df1=df1.append(pd.DataFrame([sens],columns=column_name),ignore_index=True)
-    elif feature is 'Response Time':
+    elif feature=='Response Time':
         for i in range(num_poi):
             poi = list_poi[i]//gap
             if i+1==num_poi:
@@ -204,7 +204,7 @@ def matrix_type2(feature,df,list_poi,gap,total_sensor,dat_col, points):
             for i in range (start,start+total_sensor):
                 sens.append(recovery_time(i,poi,df,next,gap))
             df1=df1.append(pd.DataFrame([sens],columns=column_name),ignore_index=True)
-    elif feature is 'Integral Area':
+    elif feature=='Integral Area':
         points = points // gap
         for i in range(num_poi):
             poi = list_poi[i]//gap
@@ -216,7 +216,7 @@ def matrix_type2(feature,df,list_poi,gap,total_sensor,dat_col, points):
             for i in range (start,start+total_sensor):
                 sens.append(integral_area(i,poi,df,points,gap))
             df1=df1.append(pd.DataFrame([sens],columns=column_name),ignore_index=True)
-    elif feature is 'Ratio':
+    elif feature=='Ratio':
         for i in range(num_poi):
             poi = list_poi[i]//gap
             if i+1==num_poi:
