@@ -64,7 +64,8 @@ def response(df, t_col_no, dat_col):
         event, values = window.read()
         if event is sg.WIN_CLOSED:
             break
-        if event is 'Proceed to Feature Extraction':            
+        if event is 'Proceed to Feature Extraction':
+            window.close()            
             return
         if event is 'Save Plot':
             save_plot_dashboard(fig)

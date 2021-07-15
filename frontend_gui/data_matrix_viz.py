@@ -253,8 +253,8 @@ def data_matrix_landing(df, dat_col):
 
     flag=1
 
-    parameters=[[sg.Text('Enter the points of injection(integers; corresponding to the number of signals) based on the the timestamp column(not index column) of your response data. The points of injection must be separated by commas', size=(50,5)), sg.Input(key='_POI_', enable_events=True)],
-    [sg.Text('Enter the gap(in seconds) between each data point. If no time reference available, please leave it blank', size=(50,2)), sg.Input(key='_GAP_', enable_events=True)],
+    parameters=[[sg.Text('Enter the points of injection(integers; corresponding to the number of signals) based on the the timestamp column of your response data. If timestamp is not available, enter POIs using index column and enter the gap as 1. The points of injection must be separated by commas', size=(50,5)), sg.Input(key='_POI_', enable_events=True)],
+    [sg.Text('Enter the gap(in seconds) between each data point. If no time reference available, please enter 1', size=(50,3)), sg.Input(key='_GAP_', enable_events=True)],
     [sg.Text('Enter the number of sensors in your array. Please do not include empty columns in your count', size=(50,2)), sg.Input(key='_TOTALSENSORS_', enable_events=True)]]
 
     layout=[[sg.Frame('Explanation of the type of feature matrix', layout=explainertable)],

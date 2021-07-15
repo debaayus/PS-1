@@ -40,18 +40,18 @@ def savepdf(fig, dirname, filename, dots_per_inch):
 
 def savecsv(dm, dirname, filename, separator):
         fig_path=dirname+'/'+filename+'.csv'
-        dm.to_csv(fig_path, sep=separator, index=False ,header=True)
+        dm.to_csv(fig_path, sep=separator, index=True ,header=True)
         return
 
 def savexlsx(dm, dirname, filename):
         fig_path=dirname+'/'+filename+'.xlsx'
-        dm.to_excel(fig_path, sep=separator, index=False ,header=True)
+        dm.to_excel(fig_path, sep=separator, index=True ,header=True)
         return
 
 def savetxt(dm, dirname, filename, delim):
         fig_path=dirname+'/'+filename+'.txt'
         numpy_array = dm.to_numpy()
-        np.savetxt(fig_path, fmt='%d', delimiter=delim, header=True, index=False)
+        np.savetxt(fig_path, fmt='%d', delimiter=delim, header=True, index=True)
         return
 
 
