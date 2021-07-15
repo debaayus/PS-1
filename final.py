@@ -47,6 +47,7 @@ def foo():
     
     if flag==1:
         plotting.response(df, t_col_no, dat_col)
+        dm=data_matrix_viz.data_matrix_landing(df, dat_col)
         #while True:
             #data_matrix_viz.data_matrix_landing(df, dat_col)
             

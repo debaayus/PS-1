@@ -8,41 +8,36 @@ from frontend_gui.plotting import conc_feature_plot_dash_type2
 from backend import feature_extraction
 
 
-def type1(df, dat_col, features):
+def type1(df, dat_col):
     y_cols=df.columns[(int(dat_col)-1): df.shape[1]].tolist()
     layout1=[[sg.Text('Choose the sensor for which the data matrix needs to be created')],
     [sg.Combo(values=y_cols, default_value=y_cols[0], key='_SENSOR_', size=(30, 6), readonly=True)]]
     
 
-    layout2=[[sg.Text('Choose the features for your Type I data matrix. Multiple features should be chosen(preferably all)')],
-    [sg.Text('Black means chosen and white means not chosen')],
-    [sg.Listbox(values=features, default_values=features, select_mode='multiple', key='_FEATURES_', size=(30, 6))]]
+    layout2=[[sg.Text('These are the features which will be extracted from the response data:')],
+    [sg.Text("Response(in %), Recovery Slope, Response Slope, Recovery Time, Response Time, Integral Area, Ratio")]]
 
     layout=[[sg.Frame('Sensor', layout=layout1)],
     [sg.Frame('Features', layout=layout2)],
     [sg.Button('Proceed to Type I data matrix computation'), sg.Cancel()]]
 
-    window=sg.window('Type I matrix parameters', layout=layout)
+    window=sg.Window('Type I matrix parameters', layout=layout)
 
     while True:
         event, values= window.read()
         if event==sg.WIN_CLOSED or event=='Cancel':
             break
         if event=='Proceed to Type I data matrix computation':
-            if 'Integral Area' in values['_FEATURES_']:
                 try:
-                    timeintegral=sg.popup_get_text('Since you have chosen integral area, please enter the number of seconds to calculate the integral area')
+                    timeintegral=sg.popup_get_text('Please enter the number of seconds to calculate the integral area')
                     if timeintegral is '':
                         sg.popup_error('Empty field received')
                         continue
                     else:
                         window.close()
-                        return (values['_SENSOR_'], values['_FEATURES_'], int(timeintegral))
+                        return (values['_SENSOR_'], int(timeintegral))
                 except TypeError:
-                    continue 
-            else:
-                window.close()
-                return (values['_SENSOR_'], values['_FEATURES_'], 0) 
+                    continue  
     window.close()
     return
 
@@ -52,15 +47,14 @@ def type2(df, dat_col, features):
 
     y_cols=df.columns[(int(dat_col)-1): df.shape[1]].tolist()
     
-    layout2=[[sg.Text('Choose the sensors for your Type II data matrix. Multiple sensors should be chosen(preferably all)')],
-    [sg.Text('Black means chosen and white means not chosen')],
-    [sg.Listbox(values=y_cols, default_values=y_cols, select_mode='multiple', key='_SENSORS_', size=(30, 6))]]
+    layout2=[[sg.Text('The chosen feature will be extracted for all signals(based on the POI) for all sensors in the array')],
+    [sg.Text('{}'.format(df.columns))]]
 
     layout=[[sg.Frame('Feature', layout=layout1)],
     [sg.Frame('Sensors', layout=layout2)],
     [sg.Button('Proceed to data matrix Type II computation'), sg.Cancel()]]
     
-    window=sg.window('Type II matrix parameters', layout=layout)
+    window=sg.Window('Type II matrix parameters', layout=layout)
 
     while True:
         event, values= window.read()
@@ -75,12 +69,12 @@ def type2(df, dat_col, features):
                         continue
                     else:
                         window.close()
-                        return (values['_FEATURE_'], values['_SENSORS_'], int(timeintegral))
+                        return (values['_FEATURE_'], int(timeintegral))
                 except TypeError:
                     continue 
             else:
                 window.close()
-                return (values['_FEATURE_'], values['_SENSORS_'], 0)
+                return (values['_FEATURE_'], 0)
 
     window.close()
     return
@@ -156,6 +150,7 @@ def options(dm, flag, typemat):
             else:
                 continue
         elif event=='Reset and create new data matrix':
+            window.close()
             return 0
 
     window.close()
@@ -250,18 +245,17 @@ def data_matrix_landing(df, dat_col):
                 ## If user wants to change matrix, call this landing page again and restart process.(These buttons in table method)
     features=['Response(in %)','Recovery Slope', 'Response Slope', 'Recovery Time', 'Response Time', 'Integral Area', 'Ratio']
     
-    header_list=['Type I matrix', 'Type II matrix']
-    explanation=['This type of matrix will extract your chosen features for every signal(every injection) of a single sensor from your response data', 
-    'This type of matrix will extract one feature for every signal(every injection) of the chosen sensors from your response data']
-    explainertable=[[sg.Table(explanation, headings=header_list)]]
+    explainertable=[[sg.Text('Type I: This type of matrix will extract your chosen features for every signal(every injection) of a single sensor from your response data', size=(50,4))],
+                    [sg.Text('Type II: This type of matrix will extract one feature for every signal(every injection) of the chosen sensors from your response data', size=(50,4))]]
     typeofmatrix=[[sg.Text('Confirm the type of matrix you want to create')], 
     [sg.Radio('Type I', "type", default=True, key='_TYPE_'),
     sg.Radio('Type II', "type", default=False)]]
 
     flag=1
 
-    parameters=[[sg.Text('Enter the points of injection(integers) based on the index column(not the timestamp column) of your response data. The points of injection must be separated by commas', size=(50,3)), sg.Input(key='_POI_', enable_events=True)],
-    [sg.Text('Enter the gap(in seconds) between each data point. If no time reference available, please leave it blank', size=(50,2)), sg.Input(key='_GAP_', enable_events=True)]]
+    parameters=[[sg.Text('Enter the points of injection(integers; corresponding to the number of signals) based on the the timestamp column(not index column) of your response data. The points of injection must be separated by commas', size=(50,5)), sg.Input(key='_POI_', enable_events=True)],
+    [sg.Text('Enter the gap(in seconds) between each data point. If no time reference available, please leave it blank', size=(50,2)), sg.Input(key='_GAP_', enable_events=True)],
+    [sg.Text('Enter the number of sensors in your array. Please do not include empty columns in your count', size=(50,2)), sg.Input(key='_TOTALSENSORS_', enable_events=True)]]
 
     layout=[[sg.Frame('Explanation of the type of feature matrix', layout=explainertable)],
     [sg.Frame('Type of matrix to be created', layout=typeofmatrix)],
@@ -269,8 +263,8 @@ def data_matrix_landing(df, dat_col):
     [sg.Text('Press submit to proceed to adding specific details for either Type I or Type II')],
     [sg.Button('Submit')]]
 
+    
     window=sg.Window("Feature extraction and Data Matrix creation", layout=layout)
-
     while True:
         event, values=window.Read()
         if event==sg.WIN_CLOSED:
@@ -285,12 +279,14 @@ def data_matrix_landing(df, dat_col):
             if values['_TYPE_'] is False:
                 ##code for Type 2
                 dm=pd.DataFrame()
-                feature, sensors, time=type2(df, dat_col, features)
+                feature, time=type2(df, dat_col, features)
+                dm=feature_extraction.matrix_type2(feature,df,poi_list,gap, int(values['_TOTALSENSORS_']),dat_col, time)
 
                 ##feature extraction method which returns a data matrix with correct indexing and columns [ dm=xyz(params) ] 
                 ##available parameters for type 2: poi_list(list of strings), gap(integer in seconds), sensors(list of strings)
                 ##                                 time(integer; its 0 if user has not chosen integral area), feature(string),
                 ##                                 type of matrix can directly be passed to the parameter list 
+                
                 dm=options(dm, flag, 2)
                 if dm==0:
                     continue
@@ -300,7 +296,8 @@ def data_matrix_landing(df, dat_col):
             elif values['_TYPE_'] is True:
                 ##Code for type 1
                 dm=pd.DataFrame()
-                sensor, features, time=type1(df, dat_col, features)
+                sensor, time=type1(df, dat_col)
+                dm=feature_extraction.matrix_type1(df, poi_list, gap, time, sensor)
                 
                 ##feature extraction method which returns a data matrix with correct indexing and columns [ dm=xyz(params) ] 
                 ##available parameters for type 1: poi_list(list of strings), gap(integer in seconds), sensor(string) 
