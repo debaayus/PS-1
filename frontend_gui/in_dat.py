@@ -232,7 +232,7 @@ def show_table_final(df,data_final, header_list_final ,fn):
                 except:
                     sg.popup_error('Error in index insertion method. Click the error button to exit')
                     break
-            if values['_RAD_'] is True:
+            elif values['_RAD_'] is True:
                 t_col_no=sg.popup_get_text('Confirm the column number of the timestamp column (eg. Column number is 1 if the timestamp column is the 1st column. If no timestamp column, then please enter X', size=(15,7))
                 dat_col=sg.popup_get_text('Confirm the column number of the first sensor data. (eg. Column number is 2 if the first sensor data column is the 2nd column.)', size= (15,4))
                 df=df.set_index(df.columns[0])
@@ -336,41 +336,32 @@ def show_table_MVA(dm, data_mat_final, header_list_mat_final, fn):
 
 def t1(dm, fn):
     layout1=[[sg.Text('Enter the name of the sensor for your Type I matrix'), sg.Input(key='_SENSORNAME_', enable_events=True)],
-    [sg.Button('Proceed directly to MVA')]]
+    [sg.Button('Proceed directly to application of machine learning algorithms')]]
     
-    layout2= [[sg.Text('If you wish to visualize concentration and a feature in a plot, please enter the following parameters', size=(50,2))],
-    [sg.Text('Enter the name of the column to be appended', size=(50,1)), sg.Input(key='_COL_', enable_events=True)],
-    [sg.Text('Enter the concentration values in sequence separated by commas. Expected number of concentration entries are {}'.format(dm.shape[0]), size=(50,2)), sg.Input(key='_CONC_', enable_events=True)],
-    [sg.Button('Data matrix action dashboard')]]
     
     layout=[[sg.Frame('MVA parameters(Mandatory)', layout=layout1)],
-    [sg.Frame('Visualization of concentration and features(Optional)', layout=layout2)]]
+    [sg.Text('Press data matrix dashboard to insert columns, change indexing, visualize plots and then proceed to the ML algorithm applications', size=(50,2))],
+    [sg.Button('Data matrix action dashboard')]]
 
     window=sg.Window('Type I matrix', layout=layout)
     while True:
         event, values=window.read()
         if event==sg.WIN_CLOSED:
             break
-        elif event=='Proceed directly to MVA':
+        elif event=='Proceed directly to application of machine learning algorithms':
             if values['_SENSORNAME_'] is '':
                 sg.popup_error('Sensor name field is empty')
                 continue
             window.close()
             return (dm, values['_SENSORNAME_'])
         elif event=='Data matrix action dashboard':
-            if values['_CONC_'] is '' or values['_COL_'] is '':
-                sg.popup_error('Concentration column fields empty')
+            if values['_SENSORNAME_'] is '':
+                sg.popup_error('Sensor name field is empty')
                 continue
-            conc1= [x.strip() for x in values['_CONC_'].split(',')]
-            conc=[float(i) for i in conc1]
-            if len(conc) != dm.shape[0]:
-                sg.popup_error("Number of arguments does not match the shape of the data matrix")
-                continue
-            else:
-                window.close()
-                dm.insert(0, values['_COL_'], conc)
-                dm=options(dm, 0, 1)
-                return (dm, values['_SENSORNAME_']) 
+            window.close()
+            dm.insert(0, values['_COL_'], conc)
+            dm=options(dm, 0, 1)
+            return (dm, values['_SENSORNAME_']) 
     window.close()
     return
 
@@ -379,15 +370,11 @@ def t2(dm):
     layout1=[
     [sg.Text('Choose the feature which has been tabulated in your uploaded Type II data matrix')],
     [sg.Combo(values=features, default_value=features[0], key='_FEATURE_', size=(30, 6), readonly=True)],
-    [sg.Button('Proceed directly to MVA')]]
-
-    layout2= [[sg.Text('If you wish to visualize concentration and a feature in a plot, please enter the following parameters', size=(50,2))],
-    [sg.Text('Enter the name of the column to be appended', size=(50,1)), sg.Input(key='_COL_', enable_events=True)],
-    [sg.Text('Enter the concentration values in sequence separated by commas. Expected number of concentration entries are {}'.format(dm.shape[0]), size=(50,2)), sg.Input(key='_CONC_', enable_events=True)],
-    [sg.Button('Data matrix action dashboard')]]
+    [sg.Button('Proceed directly to application of machine learning algorithms')]]
     
     layout=[[sg.Frame('MVA parameters(Mandatory)', layout=layout1)],
-    [sg.Frame('Visualization of concentration and features(Optional)', layout=layout2)]]
+    [sg.Text('Press data matrix dashboard to insert columns, change indexing, visualize plots and then proceed to the ML algorithm applications', size=(50,2))],
+    [sg.Button('Data matrix action dashboard')]]
 
 
     window=sg.Window('Type II matrix', layout=layout)
@@ -396,24 +383,12 @@ def t2(dm):
         event, values=window.read()
         if event==sg.WIN_CLOSED:
             break
-        elif event=='Proceed directly to MVA':
+        elif event=='Proceed directly to application of machine learning algorithms':
             window.close()
             return (dm, values['_FEATURE_'])
         elif event=='Data matrix action dashboard':
-            if values['_CONC_'] is '' or values['_COL_'] is '':
-                sg.popup_error('Concentration column fields empty')
-                continue
-
-            conc1= [x.strip() for x in values['_CONC_'].split(',')]
-            conc=[float(i) for i in conc1]
-            if len(conc) != dm.shape[0]:
-                sg.popup_error("Number of arguments does not match the shape of the data matrix")
-                continue
-            else:
-                window.close()
-                dm.insert(0, values['_COL_'], conc)
-                dm=options(dm, 0, 2)
-                return (dm, values['_FEATURE_'])
+            dm=options(dm, 0, 2)
+            return (dm, values['_FEATURE_'])
     window.close()
     return
 

@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from PIL import Image
 from io import BytesIO
 
@@ -36,14 +38,21 @@ def savepdf(fig, dirname, filename, dots_per_inch):
         fig.savefig(fig_path, format='pdf', dpi=float(dots_per_inch), bbox_inches='tight')
         return
 
-def savecsv():
-        pass
+def savecsv(dm, dirname, filename, separator):
+        fig_path=dirname+'/'+filename+'.csv'
+        dm.to_csv(fig_path, sep=separator, index=False ,header=True)
+        return
 
-def savexlsx():
-        pass
+def savexlsx(dm, dirname, filename):
+        fig_path=dirname+'/'+filename+'.xlsx'
+        dm.to_excel(fig_path, sep=separator, index=False ,header=True)
+        return
 
-def savedatpdf():
-        pass
+def savetxt(dm, dirname, filename, delim):
+        fig_path=dirname+'/'+filename+'.txt'
+        numpy_array = dm.to_numpy()
+        np.savetxt(fig_path, fmt='%d', delimiter=delim, header=True, index=False)
+        return
 
 
 

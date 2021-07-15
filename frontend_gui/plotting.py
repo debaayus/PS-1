@@ -182,8 +182,8 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
 
     layout4=[
     [sg.Text('If you wish to plot a particular section of the graph, e.g, from the 700th data point to the 800th data point for the chosen Y-axis columns, then fill the following parameters. Otherwise please leave it blank to allow the program to plot all the data', size=(45,6))],
-    [sg.Text('Enter the start index', size=(45,1)), sg.Input(key='_SINDEX_', enable_events=True)],
-    [sg.Text('Enter the end index', size=(45,1)), sg.Input(key='_EINDEX_', enable_events=True)]]
+    [sg.Text('Enter the start index(eg. 800)', size=(45,1)), sg.Input(key='_SINDEX_', enable_events=True)],
+    [sg.Text('Enter the end index(eg. 1000)', size=(45,1)), sg.Input(key='_EINDEX_', enable_events=True)]]
 
     layout=[
     [sg.Frame('Plot Parameters', layout=layout1)],
@@ -338,7 +338,7 @@ def conc_feature_preview_type1(dm, width, height, title, xlabel, ylabel, concX, 
         index_val=[str(x) for x in dm.index.values.tolist()]
         conc_val=[str(x) for x in dm.loc[:, concX].tolist()]
         label=[a + "_" + b for a, b in zip(index_val, conc_val )]
-        ax.scatter(dm.loc[:, concX], dm.loc[:,featureY], alpha=0.8)
+        ax.scatter(dm.loc[:, concX], dm.loc[:,featureY], alpha=0.8, s=25)
         ax.legend(labels=label, loc='upper left', bbox_to_anchor=(1,1))
         
     elif concX==0 and featureY==0:
@@ -346,7 +346,7 @@ def conc_feature_preview_type1(dm, width, height, title, xlabel, ylabel, concX, 
         index_val=[str(x) for x in dm.index.values.tolist()]
         conc_val=[str(x) for x in dm.loc[:, concY].tolist()]
         label=[a +"_"+ b for a, b in zip(index_val, conc_val)]
-        ax.scatter(dm.loc[:,featureX], dm.loc[:, concY], alpha=0.8)
+        ax.scatter(dm.loc[:,featureX], dm.loc[:, concY], alpha=0.6, s=25)
         ax.legend(labels=label, loc='upper left', bbox_to_anchor=(1,1))
 
     
@@ -367,7 +367,7 @@ def conc_feature_preview_type1(dm, width, height, title, xlabel, ylabel, concX, 
 
     window = sg.Window('Plot', 
                        layout,
-                       size=(900,700),
+                       size=(800,600),
                        finalize=True, 
                        element_justification='center', 
                        font='Helvetica 10')
@@ -407,7 +407,7 @@ def conc_feature_preview_type2(dm, width, height, title, xlabel, ylabel, concX, 
 
     
     for val in sensorsY:
-        ax.scatter(dm.loc[:, concX], dm.loc[:,val], label=val, alpha=0.8)
+        ax.scatter(dm.loc[:, concX], dm.loc[:,val], label=val, alpha=0.8, s=25)
         ax.legend(loc='upper left', bbox_to_anchor=(1,1))
         
 
