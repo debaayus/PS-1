@@ -12,16 +12,18 @@ The first page seen by the user when he starts the application.
 """
 def landing_page():
 
-    layout2 = [[sg.Text('Press the button below to upload a csv file of a data matrix and to proceed to the visualization and multivaraite analysis of the data matrix', size=(50,5))],
+    home_tab_layout=[[sg.Text('Welcome to the Gas Sensing Toolbox')]]
+
+    layout2 = [[sg.Text('Press the button below to upload a csv file of a data matrix and to proceed to the visualization and multivaraite analysis of the data matrix', size=(200,20))],
     [sg.Button('Upload data matrix')]]
 
-    layout3 = [[sg.Text('Press the button below to upload a csv file of the complete response data, i.e., resistance vs time/index data, and begin the full analysis pipeline', size=(50,5))],
+    layout3 = [[sg.Text('Press the button below to upload a csv file of the complete response data, i.e., resistance vs time/index data, and begin the full analysis pipeline', size=(200,20))],
     [sg.Button('Upload response data')]]
 
     layout=[
-    [sg.Frame('Multivariate Analysis of Feature matrix', layout=layout2)], [sg.Frame('Full pipeline for analysis of response data', layout=layout3)],
+    [sg.TabGroup([[sg.Tab('Home', layout=home_tab_layout)], [sg.Tab('Multivariate Analysis of Feature matrix', layout=layout2)], [sg.Tab('Full pipeline for analysis of response data', layout=layout3)]])],
     [sg.Button('Exit')]]
-    return sg.Window('SMO sensor data analysis Toolbox', layout=layout, finalize=True, resizable=False, size=(500,400))
+    return sg.Window('SMO sensor data analysis Toolbox', layout=layout, finalize=True, resizable=False, size=(1000, 600))
 
 
 
@@ -62,16 +64,14 @@ def read_table():
         return (data, header_list,fn, filename)
 
 
-
-
 """
 The following function displays the dataframe which has been created from the csv file.
 It uses underlying Tkinter methods than pysimplegui itself as pysimplegui is not capable of adding a horizontal scroll bar.
 A standard size of (800, 600) is maintained to be displayed in laptops without intruding background work
 Font chosen is helvetica. This method allows the user to enter the visible delimiter apart from the usual comma.
 """
-def show_table(data, header_list, fn, filename): 
-  
+def show_table(data, header_list, fn, filename):
+
     font_family, font_size = font = ('Helvetica', 10)
     sg.set_options(font=font)
     frm_input_layout = [
@@ -84,21 +84,27 @@ def show_table(data, header_list, fn, filename):
     [sg.Text('Enter the delimiter visible, if any(eg: "|"pipe, ";" semi colon, ","comma, ":"colon). If not visible please leave it blank', size=(45,3)), sg.Input(key='_IN2_', enable_events=True)],
     [sg.Submit()]]
     layout = [[sg.Frame('Input', frm_input_layout)]]
-
+    
+    
+    
     window = sg.Window(fn, auto_size_text=True, auto_size_buttons=True,
                    grab_anywhere=True, resizable=False,
                    layout=layout, finalize=True,size=(800, 600))
+
+
+  
 
 # Set real table width after here
     window.TKroot.update()
     tree = window['_TABLE_'].Widget
     tkfont = Font(family=font_family, size=font_size)
     data_array = np.array([header_list]+data)
+    sg.popup_quick_message('Hang on for a moment, this will take a bit of time to render....', auto_close=True, non_blocking=True, font='Default 14')
     column_widths = [max(map(lambda item:tkfont.measure(item), data_array[:, i]))
     for i in range(data_array.shape[1])]
+
     for heading, width in zip(header_list, column_widths):
         tree.column(heading, width=width+font_size+20)
-    
     while True:
         event, values= window.read()
         if event==sg.WIN_CLOSED:
@@ -186,14 +192,18 @@ def show_table_final(df,data_final, header_list_final ,fn):
         enable_events=False, key='_TABLE_', 
         auto_size_columns=True,  justification='left',    
         hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=False
-    )],
-    [sg.Text('Select YES if index column(first column with values 1, 2 ,3) is visible. Select NO to allow the program to create an index column', size=(50,5)), 
+    )]]
+    param=[[sg.Text('Select YES if index column(first column with values 1, 2 ,3) is visible. Select NO to allow the program to create an index column', size=(50,2)), 
     sg.Radio('Yes', "yesorno", default=True, key='_RAD_'),
     sg.Radio('No', "yesorno", default=False)],
+    [sg.Text('Enter the column number of the timestamp column (eg. Column number is 2 if the timestamp column is the 2nd column(if index is 1st column)). If no timestamp column, then please enter X', size=(50,3)), sg.Input(key='_TCOL_', enable_events=True)],
+    [sg.Text('Enter the column number of the first sensor data. (eg. Column number is 3 if the first sensor data column is the 3rd column(if index and timestamp are the first 2 columns.))', size=(50,2)), sg.Input(key='_DATCOL_', enable_events=True)]]
+    
+    layout = [[sg.Frame('Input', frm_input_layout)],
+    [sg.Frame('Parameters from visual cues', layout=param)],
     [sg.Text('If you missed entering your delimiter, please restart the program', size=(50,1))], 
     [sg.Text('Press submit to confirm the above dataframe for further computation', size=(50,1))],
     [sg.Submit()]]
-    layout = [[sg.Frame('Input', frm_input_layout)]]
 
     window = sg.Window(fn, auto_size_text=True, auto_size_buttons=True,
                    grab_anywhere=True, resizable=False,
@@ -204,8 +214,10 @@ def show_table_final(df,data_final, header_list_final ,fn):
     tree = window['_TABLE_'].Widget
     tkfont = Font(family=font_family, size=font_size)
     data_array = np.array([header_list_final]+data_final)
+    sg.popup_quick_message('Hang on for a moment, this will take a bit of time to render....', auto_close=True, non_blocking=True, font='Default 14')
     column_widths = [max(map(lambda item:tkfont.measure(item), data_array[:, i]))
     for i in range(data_array.shape[1])]
+
     for heading, width in zip(header_list_final, column_widths):
         tree.column(heading, width=width+font_size+20)
     
@@ -217,13 +229,16 @@ def show_table_final(df,data_final, header_list_final ,fn):
             break
 
         if event=='Submit':
+            if values['_TCOL_'] is '' or values['_DATCOL_'] is '':
+                sg.popup_error('Timestamp column field or first sensor column field empty')
+                continue
             if values['_RAD_']==False:
                 try:                       ##this particular block works to add an index column and set it as the index column for the dataframe object
                     df.insert(0, column='index', value=[int(x) for x in range(1, (df.shape[0]+1))])
                     header_list_final = list(df.columns)
                     data_final = df[0:].values.tolist()
-                    t_col_no=sg.popup_get_text('Confirm the column number of the timestamp column (eg. Column number is 1 if the timestamp column is the 1st column. If no timestamp column, then please enter X', size=(15,7))
-                    dat_col=sg.popup_get_text('Confirm the column number of the first sensor data. (eg. Column number is 2 if the first sensor data column is the 2nd column.)', size= (15,4))
+                    t_col_no=values['_TCOL_']
+                    dat_col=values['_DATCOL_']
                     df=df.set_index(df.columns[0])
                     header_list_final = list(df.columns)
                     data_final = df[0:].values.tolist()
@@ -233,8 +248,8 @@ def show_table_final(df,data_final, header_list_final ,fn):
                     sg.popup_error('Error in index insertion method. Click the error button to exit')
                     break
             elif values['_RAD_'] is True:
-                t_col_no=sg.popup_get_text('Confirm the column number of the timestamp column (eg. Column number is 1 if the timestamp column is the 1st column. If no timestamp column, then please enter X', size=(15,7))
-                dat_col=sg.popup_get_text('Confirm the column number of the first sensor data. (eg. Column number is 2 if the first sensor data column is the 2nd column.)', size= (15,4))
+                t_col_no=values['_TCOL_']
+                dat_col=values['_DATCOL_']
                 df=df.set_index(df.columns[0])
                 header_list_final = list(df.columns)
                 data_final = df[0:].values.tolist()
@@ -267,20 +282,34 @@ def show_table_MVA(dm, data_mat_final, header_list_mat_final, fn):
         hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=False
     )]]
     
-    param=[[sg.Text('Confirm the type of matrix:'), 
-    sg.Radio('Type I', "type", default=True, key='_TYPE_'),
-    sg.Radio('Type II', "type", default=False)]]
     
     indexlayout=[[sg.Text('Select YES if index column(analyte names, signal numbers or integers) of the data matrix is visible. Select NO to allow the program to create an index column', size=(50,6)), 
     sg.Radio('Yes', "yesorno", default=True, key='_RAD_'),
     sg.Radio('No', "yesorno", default=False)]]
     
+    information_layout=[[sg.Text('Display info')]]
     
-    layout = [[sg.Frame('Input', frm_table_layout)],
-    [sg.Frame('Type of matrix', layout=param)], 
+    basic_layout = [[sg.Frame('Input', frm_table_layout)],
     [sg.Frame('Index confirmation', layout=indexlayout)],
-    [sg.Text('If you missed entering your delimiter, please restart the program', size=(50,1))], 
-    [sg.Button('Proceed to Multivariate Analysis')]]
+    [sg.Text('If you missed entering your delimiter, please restart the program', size=(50,1))]] 
+
+    type1_layout1=[[sg.Text('Enter the name of the sensor for your Type I matrix'), sg.Input(key='_SENSORNAME_', enable_events=True)]]
+    
+    
+    type1_layout=[[sg.Frame('MVA parameters(Mandatory)', layout=type1_layout1)],
+    [sg.Text('Press data matrix dashboard to insert columns, change indexing, visualize plots and then proceed to the ML algorithm applications', size=(50,2))],
+    [sg.Button('Data matrix action dashboard for Type I')]]
+    
+    features=['Response(in %)','Recovery Slope', 'Response Slope', 'Recovery Time', 'Response Time', 'Integral Area', 'Ratio']
+    type2_layout1=[
+    [sg.Text('Choose the feature which has been tabulated in your uploaded Type II data matrix')],
+    [sg.Combo(values=features, default_value=features[0], key='_FEATURE_', size=(30, 7), readonly=True)]]
+    
+    type2_layout=[[sg.Frame('MVA parameters(Mandatory)', layout=type2_layout1)],
+    [sg.Text('Press data matrix dashboard to insert columns, change indexing, visualize plots and then proceed to the ML algorithm applications', size=(50,2))],
+    [sg.Button('Data matrix action dashboard for Type II')]]
+
+    layout=[[sg.TabGroup([[sg.Tab('Explanation', layout=information_layout)], [sg.Tab('Feature matrix display', layout=basic_layout)], [sg.Tab('Type I matrix', layout=type1_layout)], [sg.Tab('Type II matrix', layout=type2_layout)] ])]]
 
     window = sg.Window(fn, auto_size_text=True, auto_size_buttons=True,
                    grab_anywhere=True, resizable=False,
@@ -301,39 +330,64 @@ def show_table_MVA(dm, data_mat_final, header_list_mat_final, fn):
         if event==sg.WIN_CLOSED:
             break
 
-        if event=='Proceed to Multivariate Analysis':
+        if event=='Data matrix action dashboard for Type I':
             if values['_RAD_']==False:
                 try:                       ##this particular block works to add an index column and set it as the index column for the dataframe object
                     dm.insert(0, column='index', value=[int(x) for x in range(1, (dm.shape[0]+1))])
                     dm=dm.set_index(dm.columns[0])
-                    if values['_TYPE_']==False:
-                        window.close()
-                        dm, feature=t2(dm)
-                        return (dm, 2, feature)
-                    else:
-                        window.close()
-                        dm, sensor_name=t1(dm, fn)
-                        return (dm, 1, sensor_name)
                 except:
                     sg.popup_error('Error in index insertion method. Click the error button to exit')
-                    break
+                    continue
+                if values['_SENSORNAME_'] is '':
+                    sg.popup_error('Sensor name field is empty in Type I tab')
+                    continue
+                window.close()
+                dm=options(dm, 0, 1)
+                return (dm, 1, values['_SENSORNAME_'])
             else:
-                dm=dm.set_index(dm.columns[0])
-                if values['_TYPE_']==False:
-                    window.close()
-                    dm, feature=t2(dm)
-                    return (dm, 2, feature)
-                else:
-                    window.close()
-                    dm, sensor_name=t1(dm, fn)
-                    return (dm, 1, sensor_name)
+                try:
+                    dm=dm.set_index(dm.columns[0])
+                except:
+                    sg.popup_error('Error in index setting')
+                    continue
+                if values['_SENSORNAME_'] is '':
+                    sg.popup_error('Sensor name field is empty in Type I tab')
+                    continue
+                window.close()
+                dm=options(dm,0,1)
+                return (dm, 1, values['_SENSORNAME_'])
+
+
+        elif event=='Data matrix action dashboard for Type II':
+            if values['_RAD_']==False:
+                try:                       ##this particular block works to add an index column and set it as the index column for the dataframe object
+                    dm.insert(0, column='index', value=[int(x) for x in range(1, (dm.shape[0]+1))])
+                    dm=dm.set_index(dm.columns[0])
+                except:
+                    sg.popup_error('Error in index insertion method. Click the error button to exit')
+                    continue
+                sg.popup('Please confirm the feature chosen: {}'.format(values['_FEATURE_']))
+                window.close()
+                dm=options(dm, 0, 2)
+                return (dm, 2, values['_FEATURE_'])
+            else:
+                try:
+                    dm=dm.set_index(dm.columns[0])
+                except:
+                    sg.popup_error('Error in index setting')
+                    continue
+                sg.popup('Please confirm the feature chosen: {}'.format(values['_FEATURE_']))
+                window.close()
+                dm=options(dm, 0, 2)
+                return (dm, 2, values['_FEATURE_'])
+                
 
             
     window.close()
     return
 
 
-
+"""
 def t1(dm, fn):
     layout1=[[sg.Text('Enter the name of the sensor for your Type I matrix'), sg.Input(key='_SENSORNAME_', enable_events=True)],
     [sg.Button('Proceed directly to application of machine learning algorithms')]]
@@ -392,7 +446,6 @@ def t2(dm):
     return
 
 
-
-
+"""
 
 

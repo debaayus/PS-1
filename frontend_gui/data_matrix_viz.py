@@ -83,7 +83,7 @@ def options(dm, flag, typemat):
     if flag==0:
         layout = [[sg.Button('View current data matrix')], [sg.Button('Change index column')], [sg.Button('Confirm data matrix for application of ML algorithms')], [sg.Button('Add concentration data')], [sg.Button('Concentration Plotting Dashboard')]]
     elif flag==1:
-        layout = [[sg.Button('View current data matrix')], [sg.Button('Change index column')], [sg.Button('Confirm data matrix for application of ML algorithms')], [sg.Button('Add concentration data')], [sg.Button('Reset and create new data matrix')]]
+        layout = [[sg.Button('View current data matrix')], [sg.Button('Change index column')], [sg.Button('Confirm data matrix for application of ML algorithms')], [sg.Button('Add concentration data')], [sg.Button('Concentration Plotting Dashboard')], [sg.Button('Reset and create new data matrix')]]
     
     window=sg.Window("Data matrix action dashboard", layout=layout)
     
@@ -172,7 +172,7 @@ def data_matrix_table(dm):
     frm_table_layout = [
     [sg.Table(values=data, headings=header_list,
         enable_events=False, key='_TABLE_', 
-        auto_size_columns=True,  justification='left',    
+        auto_size_columns=False,  justification='left',    
         hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=False
     )]]
     
@@ -185,14 +185,14 @@ def data_matrix_table(dm):
                    layout=layout, finalize=True)
 
 # Set real table width after here
-    window.TKroot.update()
+    """window.TKroot.update()
     tree = window['_TABLE_'].Widget
     tkfont = Font(family=font_family, size=font_size)
     data_array = np.array([header_list]+data)
     column_widths = [max(map(lambda item:tkfont.measure(item), data_array[:, i]))
     for i in range(data_array.shape[1])]
     for heading, width in zip(header_list, column_widths):
-        tree.column(heading, width=width+font_size+20)
+        tree.column(heading, width=width+font_size+20)"""
 
     while True:
         event, values= window.read()
@@ -246,74 +246,140 @@ def data_matrix_landing(df, dat_col):
                 ## If user wants to change matrix, call this landing page again and restart process.(These buttons in table method)
     features=['Response(in %)','Recovery Slope', 'Response Slope', 'Recovery Time', 'Response Time', 'Integral Area', 'Ratio']
     
-    explainertable=[[sg.Text('Type I: This type of matrix will extract your chosen features for every signal(every injection) of a single sensor from your response data', size=(50,4))],
-                    [sg.Text('Type II: This type of matrix will extract one feature for every signal(every injection) of the chosen sensors from your response data', size=(50,4))]]
-    typeofmatrix=[[sg.Text('Confirm the type of matrix you want to create')], 
-    [sg.Radio('Type I', "type", default=True, key='_TYPE_'),
-    sg.Radio('Type II', "type", default=False)]]
+    ##table display tab
+    font_family, font_size = font = ('Helvetica', 10)
+    sg.set_options(font=font)
+    df2=df.copy()
+    df2.reset_index()
+    header_list_final = list(df2.columns) 
+    data_final = (df2[0:].values.tolist())
+    
+    frm_input_layout = [
+    [sg.Table(values=data_final, headings=header_list_final,
+        enable_events=False, key='_TABLE_', 
+        auto_size_columns=True,  justification='left',    
+        hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=False
+    )]]
+
+    ###
+
+    
+    explainertab=[[sg.Text('Type I: This type of matrix will extract your chosen features for every signal(every injection) of a single sensor from your response data', size=(50,4))],
+                [sg.Text('Type II: This type of matrix will extract one feature for every signal(every injection) of the chosen sensors from your response data', size=(50,4))]]
 
     flag=1
 
     parameters=[[sg.Text('Enter the points of injection(integers; corresponding to the number of signals) based on the the timestamp column of your response data. If timestamp is not available, enter POIs using index column and enter the gap as 1. The points of injection must be separated by commas', size=(50,5)), sg.Input(key='_POI_', enable_events=True)],
-    [sg.Text('Enter the gap(in seconds) between each data point. If no time reference available, please enter 1', size=(50,3)), sg.Input(key='_GAP_', enable_events=True)],
+    [sg.Text('Enter the gap(in seconds) between each data point. If no time reference available, please enter 1', size=(50,3)), sg.Input(key='_GAP_', enable_events=True)]
+    ]
+
+
+
+    y_cols=df.columns[(int(dat_col)-1): df.shape[1]].tolist()
+    layout1_type1=[[sg.Text('Choose the sensor for which the data matrix needs to be created')],
+    [sg.Combo(values=y_cols, default_value=y_cols[0], key='_SENSOR_', size=(30, 6), readonly=True)],
+    [sg.Text('Enter the number of seconds to calculate the integral area', size=(50,1)), sg.Input(key='_TIMETYPE1_', enable_events=True)]]
+    
+
+    layout2_type1=[[sg.Text('These are the features which will be extracted from the response data:', size=(50,1))]]
+    for val in features:
+        lay=[sg.Text('{}'.format(val))]
+        layout2_type1.append(lay)
+
+    layout_type1=[[sg.Frame('Sensor', layout=layout1_type1)],
+    [sg.Frame('Features', layout=layout2_type1)],
+    [sg.Button('Proceed to Type I data matrix computation')]]
+
+
+    layout1_type2=[[sg.Text('Choose the feature for which the data matrix needs to be created')],
+    [sg.Combo(values=features, default_value=features[0], key='_FEATURE_', size=(30, 6), readonly=True)],
     [sg.Text('Enter the number of sensors in your array. Please do not include empty columns in your count', size=(50,2)), sg.Input(key='_TOTALSENSORS_', enable_events=True)]]
 
-    layout=[[sg.Frame('Explanation of the type of feature matrix', layout=explainertable)],
-    [sg.Frame('Type of matrix to be created', layout=typeofmatrix)],
-    [sg.Frame('Basic Parameters for feature extraction', layout=parameters)],
-    [sg.Text('Press submit to proceed to adding specific details for either Type I or Type II')],
-    [sg.Button('Submit')]]
+    
+    layout2_type2=[[sg.Text('The chosen feature will be extracted for all signals(based on the POI) for all sensors in the array', size=(50,1))],
+    [sg.Text('These are the sensors which will be used for the feature matrix')]]
+    for val in y_cols:
+        lay=[sg.Text('{}'.format(val))]
+        layout2_type2.append(lay)
+
+
+    layout_type2=[[sg.Frame('Feature', layout=layout1_type2)],
+    [sg.Frame('Sensors', layout=layout2_type2)],
+    [sg.Button('Proceed to data matrix Type II computation')]]
+
+    layout=[[sg.TabGroup([[sg.Tab('Explainer Tab', layout=explainertab)], [sg.Tab('Response data', layout=frm_input_layout)], [sg.Tab('Basic Input', layout=parameters)], [sg.Tab('Type I matrix computation', layout=layout_type1)], [sg.Tab('Type II matrix computation', layout=layout_type2)] ])]]
 
     
-    window=sg.Window("Feature extraction and Data Matrix creation", layout=layout)
+    window = sg.Window("Feature Extraction and Data Matrix extraction", auto_size_text=True, auto_size_buttons=True,
+                   grab_anywhere=True, resizable=False,
+                   layout=layout, finalize=True,size=(1200, 800))
+
+    ### table helper method
+    window.TKroot.update()
+    tree = window['_TABLE_'].Widget
+    tkfont = Font(family=font_family, size=font_size)
+    data_array = np.array([header_list_final]+data_final)
+    sg.popup_quick_message('Hang on for a moment, this will take a bit of time to render....', auto_close=True, non_blocking=False, font='Default 14')
+    column_widths = [max(map(lambda item:tkfont.measure(item), data_array[:, i]))
+    for i in range(data_array.shape[1])]
+
+    for heading, width in zip(header_list_final, column_widths):
+        tree.column(heading, width=width+font_size+20)
+
+    ####
+    
+
+    
+    
     while True:
         event, values=window.Read()
         if event==sg.WIN_CLOSED:
             break
-        if event=='Submit':
+        if event=='Proceed to Type I data matrix computation':
             if values['_POI_'] is '' or values['_GAP_'] is '':
                 sg.popup_error('POI or Gap fields are empty. Please fill these mandatory parameters')
                 continue
+            
             poi_string_list=[x.strip() for x in values['_POI_'].split(',')]
             poi_list=[int(i) for i in poi_string_list]
             gap=int(values['_GAP_'])
-            if values['_TYPE_'] is False:
-                ##code for Type 2
-                
-                feature, time=type2(df, dat_col, features)
-                dm=feature_extraction.matrix_type2(feature, df, poi_list, gap, int(values['_TOTALSENSORS_']), dat_col, time)
 
-                ##feature extraction method which returns a data matrix with correct indexing and columns [ dm=xyz(params) ] 
-                ##available parameters for type 2: poi_list(list of strings), gap(integer in seconds), sensors(list of strings)
-                ##                                 time(integer; its 0 if user has not chosen integral area), feature(string),
-                ##                                 type of matrix can directly be passed to the parameter list 
-                
-                dm=options(dm, flag, 2)
-                if dm.empty:
+            if values['_TIMETYPE1_'] is '':
+                sg.popup_error('Integral Area parameter empty')
+                continue
+
+            dm=feature_extraction.matrix_type1(df, poi_list, gap, int(values['_TIMETYPE1_']), values['_SENSOR_'])
+            ##error catching needed here
+            dm=options(dm, flag, 1)
+            window.close()
+            return dm
+
+        elif event=='Proceed to Type II data matrix computation':
+            if values['_POI_'] is '' or values['_GAP_'] is '':
+                sg.popup_error('POI or Gap fields are empty. Please fill these mandatory parameters')
+                continue
+            
+            poi_string_list=[x.strip() for x in values['_POI_'].split(',')]
+            poi_list=[int(i) for i in poi_string_list]
+            gap=int(values['_GAP_'])
+            
+            if values['_TOTALSENSORS_'] is '':
+                sg.popup_error('Total number of sensors field is empty')
+                continue
+
+            if values['_FEATURE_']=='Integral Area':
+                timeintegral=sg.popup_get_text('Since you have chosen integral area, please enter the number of seconds to calculate the integral area')
+                ##error catching needed here
+                if timeintegral is '':
+                    sg.popup_error('Empty field received')
                     continue
-                else:
-                    window.close()
-                    return dm
-            elif values['_TYPE_'] is True:
-                ##Code for type 1
-                
-                sensor, time=type1(df, dat_col)
-                dm=feature_extraction.matrix_type1(df, poi_list, gap, time, sensor)
-                
-                ##feature extraction method which returns a data matrix with correct indexing and columns [ dm=xyz(params) ] 
-                ##available parameters for type 1: poi_list(list of strings), gap(integer in seconds), sensor(string) 
-                ##                                 time(integer; its 0 if user has not chosen integral area), features(list of strings),
-                ##                                 type of matrix can directly be passed to the parameter list
-                
-                dm=options(dm, flag, 1)
-                try:
-                    if dm.empty:
-                        continue
-                except TypeError:
-                    sg.popup_error('No data matrix received')
-                    continue
-                window.close()
-                return dm
+
+            dm=feature_extraction.matrix_type2(values['_FEATURE_'], df, poi_list, gap, int(values['_TOTALSENSORS_']), dat_col, time)
+            ##error catching needed here
+            dm=options(dm, flag, 2)
+            window.close()
+            return dm
+
     window.close()
     return
 

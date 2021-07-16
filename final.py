@@ -17,29 +17,35 @@ def foo():
         if event == sg.WIN_CLOSED or event == 'Exit':  # if all windows were closed
             break
         elif event == 'Upload response data':
-            data, header_list,fn, filename=in_dat.read_table()
-            show_prompt = sg.popup_yes_no('Process the sensor response data?')
-            if show_prompt=='Yes':
-                home.close()
-                skiprow, delim, filename=in_dat.show_table(data, header_list, fn, filename)
-                df, data_final, header_list_final, fn = in_dat.read_table_final(skiprow, delim, filename)
-                df, data_final, header_list_final, fn, t_col_no, dat_col = in_dat.show_table_final(df,data_final, header_list_final ,fn) #any index updates if needed
-                flag=1
-                break
-            else:
-                break
+            try:
+                data, header_list,fn, filename=in_dat.read_table()
+                show_prompt = sg.popup_yes_no('Process the sensor response data?')
+                if show_prompt=='Yes':
+                    home.close()
+                    skiprow, delim, filename=in_dat.show_table(data, header_list, fn, filename)
+                    df, data_final, header_list_final, fn = in_dat.read_table_final(skiprow, delim, filename)
+                    df, data_final, header_list_final, fn, t_col_no, dat_col = in_dat.show_table_final(df,data_final, header_list_final ,fn) #any index updates if needed
+                    flag=1
+                    break
+                else:
+                    continue
+            except TypeError:
+                continue
         elif event=='Upload data matrix':
-            data, header_list,fn, filename=in_dat.read_table()
-            show_prompt = sg.popup_yes_no('Process the feature matrix?')
-            if show_prompt=='Yes':
-                home.close()
-                skiprow, delim, filename=in_dat.show_table(data, header_list, fn, filename)
-                df, data_final, header_list_final, fn = in_dat.read_table_final(skiprow, delim, filename)
-                dm, typemat, sens_name_or_feature = in_dat.show_table_MVA(df, data_final, header_list_final ,fn) 
-                flag=2
-                break
-            else:
-                break
+            try:
+                data, header_list,fn, filename=in_dat.read_table()
+                show_prompt = sg.popup_yes_no('Process the feature matrix?')
+                if show_prompt=='Yes':
+                    home.close()
+                    skiprow, delim, filename=in_dat.show_table(data, header_list, fn, filename)
+                    df, data_final, header_list_final, fn = in_dat.read_table_final(skiprow, delim, filename)
+                    dm, typemat, sens_name_or_feature = in_dat.show_table_MVA(df, data_final, header_list_final ,fn) 
+                    flag=2
+                    break
+                else:
+                    continue
+            except TypeError:
+                continue
 
     home.close()
     
