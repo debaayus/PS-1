@@ -3,10 +3,24 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import tkinter as Tk
 
+"""
+experimental functions
+"""
+def draw_figure(canvas, figure):
+    plt.close('all')
+    figure_canvas_agg = FigureCanvasTkAgg(figure, canvas)
+    figure_canvas_agg.draw()
+    figure_canvas_agg.get_tk_widget().pack(side='top', fill='both', expand=1)
+    return figure_canvas_agg
+
+def delete_figure_agg(figure_agg):
+    figure_agg.get_tk_widget().forget()
+    plt.close('all')
 
 
 """
 The following function is a helper function which is necessary to embed the plot in canvas element of the GUI.
+"""
 """
 def draw_figure(canvas, figure): 
         figure_canvas_agg = FigureCanvasTkAgg(figure, canvas)
@@ -14,6 +28,7 @@ def draw_figure(canvas, figure):
         figure_canvas_agg.get_tk_widget().pack(side='top', fill='both', expand=1)
         return figure_canvas_agg
 
+"""
 """
 Experimental function to add toolbar functionality however it might be useful for a different usecase
 """

@@ -23,7 +23,7 @@ def landing_page():
     layout=[
     [sg.TabGroup([[sg.Tab('Home', layout=home_tab_layout)], [sg.Tab('Multivariate Analysis of Feature matrix', layout=layout2)], [sg.Tab('Full pipeline for analysis of response data', layout=layout3)]])],
     [sg.Button('Exit')]]
-    return sg.Window('SMO sensor data analysis Toolbox', layout=layout, finalize=True, resizable=False, size=(1000, 600))
+    return sg.Window('SMO sensor data analysis Toolbox', layout=layout, finalize=True, resizable=False, size=(800, 600))
 
 
 
@@ -99,7 +99,6 @@ def show_table(data, header_list, fn, filename):
     tree = window['_TABLE_'].Widget
     tkfont = Font(family=font_family, size=font_size)
     data_array = np.array([header_list]+data)
-    sg.popup_quick_message('Hang on for a moment, this will take a bit of time to render....', auto_close=True, non_blocking=True, font='Default 14')
     column_widths = [max(map(lambda item:tkfont.measure(item), data_array[:, i]))
     for i in range(data_array.shape[1])]
 
@@ -214,7 +213,6 @@ def show_table_final(df,data_final, header_list_final ,fn):
     tree = window['_TABLE_'].Widget
     tkfont = Font(family=font_family, size=font_size)
     data_array = np.array([header_list_final]+data_final)
-    sg.popup_quick_message('Hang on for a moment, this will take a bit of time to render....', auto_close=True, non_blocking=True, font='Default 14')
     column_widths = [max(map(lambda item:tkfont.measure(item), data_array[:, i]))
     for i in range(data_array.shape[1])]
 

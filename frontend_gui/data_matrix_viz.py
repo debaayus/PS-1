@@ -7,7 +7,7 @@ from frontend_gui.plotting import conc_feature_plot_dash_type1
 from frontend_gui.plotting import conc_feature_plot_dash_type2
 from backend import feature_extraction
 
-
+"""
 def type1(df, dat_col):
     y_cols=df.columns[(int(dat_col)-1): df.shape[1]].tolist()
     layout1=[[sg.Text('Choose the sensor for which the data matrix needs to be created')],
@@ -78,6 +78,8 @@ def type2(df, dat_col, features):
 
     window.close()
     return
+
+"""
 
 def options(dm, flag, typemat):
     if flag==0:
@@ -312,14 +314,14 @@ def data_matrix_landing(df, dat_col):
     
     window = sg.Window("Feature Extraction and Data Matrix extraction", auto_size_text=True, auto_size_buttons=True,
                    grab_anywhere=True, resizable=False,
-                   layout=layout, finalize=True,size=(1200, 800))
+                   layout=layout, finalize=True,size=(800, 600))
 
     ### table helper method
     window.TKroot.update()
     tree = window['_TABLE_'].Widget
     tkfont = Font(family=font_family, size=font_size)
     data_array = np.array([header_list_final]+data_final)
-    sg.popup_quick_message('Hang on for a moment, this will take a bit of time to render....', auto_close=True, non_blocking=False, font='Default 14')
+    
     column_widths = [max(map(lambda item:tkfont.measure(item), data_array[:, i]))
     for i in range(data_array.shape[1])]
 

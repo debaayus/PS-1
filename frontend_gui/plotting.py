@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.ticker import MultipleLocator,FormatStrFormatter,MaxNLocator
-from frontend_gui.plotting_utils import draw_figure, draw_figure_w_toolbar, Toolbar
+from frontend_gui.plotting_utils import draw_figure, draw_figure_w_toolbar, Toolbar, delete_figure_agg
 from frontend_gui.saving_plot import save_plot_dashboard
 
 """
@@ -27,69 +27,41 @@ def response(df, t_col_no, dat_col):
     ax = fig.add_subplot(111)
     for i in range((int(dat_col)-1),  df.shape[1]):
         ax.plot(t_col, df.iloc[:,i], linewidth=0.8)  ##reduction of linewidth to see the noise more clearly
-    ax.xaxis.set_major_locator(plt.MaxNLocator(3))
+    ax.xaxis.set_major_locator(plt.MaxNLocator(5))
     ax.set_title('Response Curve', fontweight='bold')
     ax.set_xlabel('Scan', fontweight ='bold')
     ax.set_ylabel('Resistance', fontweight='bold')
+    ax.margins(0)
     ax.legend(df.columns[(int(dat_col)-1): df.shape[1]], loc='upper left', bbox_to_anchor=(1,1), prop={'size': 6})
 
-
-
-
-    layout = [[sg.Text('Plot of Scan vs Resistance')],
-              [sg.Canvas(key='-CANVAS-', 
-                         size=(600,400),
-                         pad=(5,10))],
-              [sg.Button('Proceed to Feature Extraction'), sg.Button('Save Plot')],
-              [sg.Text('Press "New Plot" to create customized plots with your choice of columns'), sg.Button('New Plot')]]
-
-
-
-
-
-    # create the form and show it without the plot
-    window = sg.Window('Plot', 
-                       layout,
-                       size=(800,600),
-                       finalize=True, 
-                       element_justification='center', 
-                       font='Helvetica 10')
-
-    # add the plot to the window
-    fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
-
-    
-    #event loop designed in a way to allow the user to keep seeing the original plot till satisfied
-    while True:
-        event, values = window.read()
-        if event is sg.WIN_CLOSED:
-            break
-        if event is 'Proceed to Feature Extraction':
-            window.close()            
-            return
-        if event is 'Save Plot':
-            save_plot_dashboard(fig)
-        if event is 'New Plot':
-            customized_plotting_dashboard(df, t_col_no, dat_col)
-
-
-
-    window.close()
+    return fig
 
 
 """
 This function plots the response curve using parameters from a dashboard function. Lots of parameters are left upto the user.
 """
-def preview_plot(df, width, height, title, xlabel, ylabel, legend, max_x_ticks, max_y_ticks, x_col, y_col, start, end):
+def preview_plot(df, theme, width, height, lw, title, title_bold, title_size, xylabelsize, xybold, xlabel, ylabel, legend, legend_size, max_x_ticks, max_y_ticks, x_col, y_col, start, end):
     fig_size=(float(width), float(height))
-
+   
 
     """Figure creation using matplotlib"""
     mpl.rcParams['pdf.fonttype'] = 42
     mpl.rcParams['ps.fonttype'] = 42
     mpl.rcParams['font.family'] = 'Arial'
 
+    
+    if title_bold is True:
+        title_bold='bold'
+    else:
+        title_bold='regular'
+
+    if xybold is True:
+        xybold='bold'
+    else:
+        xybold='regular'
+
     fig = plt.figure(figsize=fig_size)
+    plt.style.use(theme)
     ax = fig.add_subplot(111)
 
     if start is not False and end is not False:
@@ -97,50 +69,19 @@ def preview_plot(df, width, height, title, xlabel, ylabel, legend, max_x_ticks, 
             ax.plot(x_col[start:(end+1)], df.loc[start:end, col], linewidth=0.8)
     else:
         for col in y_col:
-            ax.plot(x_col, df.loc[:,col], linewidth=0.8)
+            ax.plot(x_col, df.loc[:,col], linewidth=float(lw))
     ax.xaxis.set_major_locator(plt.MaxNLocator(int(max_x_ticks)))
     ax.yaxis.set_major_locator(plt.MaxNLocator(int(max_y_ticks)))
-    ax.set_title(title , fontweight='bold')
-    ax.set_xlabel(xlabel, fontweight ='bold')
-    ax.set_ylabel(ylabel, fontweight='bold')
+    ax.margins(0)
+    ax.set_title(title , fontsize=int(title_size), fontweight=title_bold)
+    ax.set_xlabel(xlabel, fontsize=int(xylabelsize), fontweight =xybold)
+    ax.set_ylabel(ylabel, fontsize=int(xylabelsize), fontweight=xybold)
     if legend is True:
-        ax.legend(y_col, loc='upper left', bbox_to_anchor=(1,1), prop={'size': 6})
+        ax.legend(y_col, loc='upper left', bbox_to_anchor=(1,1), prop={'size': int(legend_size)})
     else:
         pass
     
-
-
-    layout = [[sg.Text('Plot of Scan vs Resistance')],
-              [sg.Canvas(key='-CANVAS-', 
-                         size=(600,400),
-                         pad=(5,10))],
-              [sg.Text('Press exit preview to go back to the plotting dashboard. Press save to choose parameters for saving image'), sg.Button('Exit Preview'), sg.Button('Save')]]
-
-
-    window = sg.Window('Plot', 
-                       layout,
-                       size=(900,700),
-                       finalize=True, 
-                       element_justification='center', 
-                       font='Helvetica 10')
-
-    # add the plot to the window
-    fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
-
-    while True:
-        event, values = window.read()
-        if event is sg.WIN_CLOSED:
-            break
-        if event is 'Exit Preview':            
-            break
-        if event is 'Save':
-            save_plot_dashboard(fig)
-            window.close()
-            return
-
-
-
-    window.close()
+    return fig
 
 """
 Extremely useful plotting dashboard. Extreme control with the user. Default values are a good guide to understand the parameters.
@@ -148,14 +89,21 @@ The preview function allows the user to keep plotting till satisfied. The struct
 """
 def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create plot with specific columns
     layout1=[
+    [sg.Text('Choose the theme of the plot'), sg.Combo(values=plt.style.available, key='_THEME_', default_value='_classic_test_patch', readonly=True, size=(30,10))],
     [sg.Text('Enter the title of the plot', size=(45,1)), sg.Input(default_text='Response Curve', key='_TITLE_', enable_events=True)],
+    [sg.Text('Font size of the title', size=(20,1)), sg.Input(key='_FS_', default_text='12', enable_events=True)], 
+    [sg.Text('Fontweight of title: ', size=(25,1)), sg.Radio('Bold', "fw", default=True, key='_FW_'), sg.Radio('Regular', "fw", default=False)],
     [sg.Text('Enter the width of the plot (in inches)', size=(45,1)), sg.Input(default_text='8', key='_WIDTH_', enable_events=True)],
     [sg.Text('Enter the height of the plot (in inches)', size=(45,1)), sg.Input(default_text='5', key='_HEIGHT_', enable_events=True)],
+    [sg.Text('Enter the line width for the plot', size=(45,1)), sg.Input(default_text='0.8', key='_LW_', enable_events=True)],
     [sg.Text('Enter the x-axis label of the plot', size=(45,1)), sg.Input(default_text='Scan', key='_XLABEL_', enable_events=True)],
     [sg.Text('Enter the y-axis label of the plot', size=(45,1)), sg.Input(default_text='Resistance',key='_YLABEL_', enable_events=True)],
+    [sg.Text('Font size of the XY labels', size=(20,1)), sg.Input(key='_FSXY_', default_text='12', enable_events=True)], 
+    [sg.Text('Fontweight of XY label: ', size=(25,1)), sg.Radio('Bold', "fwxy", default=True, key='_FWXY_'), sg.Radio('Regular', "fwxy", default=False)],
     [sg.Text('Enter the desired number of ticks in the x-axis', size=(45,1)), sg.Input(default_text='3', key='_XTICKS_', enable_events=True)],
     [sg.Text('Enter the desired number of ticks in the y-axis', size=(45,1)), sg.Input(default_text='3', key='_YTICKS_', enable_events=True)],
     [sg.Text('Do you require a legend in the plot?', size=(45,1)), sg.Radio('Yes', "legend", default=True, key='_LEGEND_'), sg.Radio('No', "legend", default=False)],
+    [sg.Text('Enter the font size of the legend', size=(45,1)), sg.Input(key='_LZ_', enable_events=True, default_text='6')],
     [sg.Text('The pdf.fonttype used is type no 42 keeping in line with IEEE standards', size=(55,1))]]
     
     #this block is to determine the x-axis and still leave functionality to the user without a fuss. 
@@ -186,20 +134,39 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
     [sg.Text('Enter the start index(eg. 800)', size=(45,1)), sg.Input(key='_SINDEX_', enable_events=True)],
     [sg.Text('Enter the end index(eg. 1000)', size=(45,1)), sg.Input(key='_EINDEX_', enable_events=True)]]
 
-    layout=[
-    [sg.Frame('Plot Parameters', layout=layout1)],
-    [sg.Frame('X-axis columns', layout=layout2), sg.Frame('Y-axis columns', layout=layout3)],
-    [sg.Frame('Optional row indexing to examine behaviour of a signal closely', layout=layout4)],
-    [sg.Text('Click preview to view the created plot and click exit to go back to the original program', size=(45,2))],
-    [sg.Button('Preview'), sg.Button('Exit')]]
+    layout_main=[
+    [sg.Frame('Plot Parameters', layout=layout1)]]
+    layout_data=[[sg.Frame('X-axis columns', layout=layout2), sg.Frame('Y-axis columns', layout=layout3)],
+    [sg.Button('Preview plot')]]
+    
+    layout_zoom=[[sg.Frame('Optional row indexing to examine behaviour of a signal closely', layout=layout4)],
+    [sg.Button('Preview zoomed plot')]]
 
-    window=sg.Window('Plotting dashborad', layout=layout)
+    layout_plot=[[sg.Canvas(size=(700, 400), key='-CANVAS-', pad=(10,10))], 
+    [sg.Button('Save Plot')]]
+
+    layout=[[sg.TabGroup([[sg.Tab('Plot parameters', layout=layout_main, key='param')], [sg.Tab('Choose data', layout=layout_data, key='data')], [sg.Tab('Plot preview', layout=layout_plot, key='plot')], [sg.Tab('Zoomed plotting', layout=layout_zoom, key='zoom')]], key='tabgroup', enable_events=True)],
+    [sg.Text('Press exit to leave the response curve dashboard and move to the feature extraction module'), sg.Button('Exit')]]
+
+
+    window = sg.Window('Plotting dashborad', layout=layout, grab_anywhere=False, finalize=True, size=(800,600))
+
+    figure_agg = draw_figure(window['-CANVAS-'].TKCanvas, response(df, t_col_no, dat_col))
+    window['tabgroup'].Widget.select(2)
+
 
     while True:
         event, v = window.Read()
         if event==sg.WIN_CLOSED or event=='Exit':
             break
-        if event=='Preview':
+
+        elif event=='Save Plot':
+            save_plot_dashboard(fig)
+            continue
+
+        elif event=='Preview plot':
+            if figure_agg:
+                delete_figure_agg(figure_agg)
             if v['_XAXIS_'] is 'Index':
                 t_col=df.index.values.tolist()
             else:
@@ -207,26 +174,78 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
             if v['_DATA_'][0] is None:
                 sg.popup_error('At least one y-axis column must be selected')
                 continue
-            if v['_WIDTH_'] is '':
+            elif v['_WIDTH_'] is '':
                 sg.popup_error('Width field cannot be blank')
                 continue
-            if v['_HEIGHT_'] is '':
+            elif v['_HEIGHT_'] is '':
                 sg.popup_error('Height field cannot be blank')
                 continue
-            if v['_XLABEL_'] is '':
+            elif v['_XLABEL_'] is '':
                 sg.popup_error('X-axis label field cannot be blank')
                 continue
-            if v['_YLABEL_'] is '':
+            elif v['_YLABEL_'] is '':
                 sg.popup_error('Y-axis label field cannot be blank')
                 continue
-            if v['_SINDEX_'] is '' or v['_EINDEX_'] is '':
-                preview_plot(df, v['_WIDTH_'], v['_HEIGHT_'], v['_TITLE_'], 
-                            v['_XLABEL_'], v['_YLABEL_'], v['_LEGEND_'], 
+            elif v['_FS_'] is '':
+                sg.popup_error('Font size of title cannot be blank')
+                continue
+            elif v['_LW_'] is '':
+                sg.popup_error('Line width field cannot be blank')
+                continue
+            elif v['_FSXY_'] is '':
+                sg.popup_error('XY label font size field cannot be blank')
+                continue
+            elif v['_LZ_'] is '':
+                sg.popup_error('Legend font size field cannot be blank')
+                continue
+            fig=preview_plot(df, v['_THEME_'], v['_WIDTH_'], v['_HEIGHT_'], v['_LW_'], v['_TITLE_'], v['_FW_'], v['_FS_'],  
+                            v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LEGEND_'], v['_LZ_'],  
                             v['_XTICKS_'], v['_YTICKS_'], t_col, v['_DATA_'], False, False)
+            figure_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
+            window['tabgroup'].Widget.select(2)
+
+        elif event=='Preview zoomed plot':
+            if figure_agg:
+                delete_figure_agg(figure_agg)
+            if v['_XAXIS_'] is 'Index':
+                t_col=df.index.values.tolist()
             else:
-                preview_plot(df, v['_WIDTH_'], v['_HEIGHT_'], v['_TITLE_'], 
-                            v['_XLABEL_'], v['_YLABEL_'], v['_LEGEND_'], 
+                t_col=df.iloc[:,(int(t_col_no)-1)]
+            if v['_DATA_'][0] is None:
+                sg.popup_error('At least one y-axis column must be selected')
+                continue
+            elif v['_WIDTH_'] is '':
+                sg.popup_error('Width field cannot be blank')
+                continue
+            elif v['_HEIGHT_'] is '':
+                sg.popup_error('Height field cannot be blank')
+                continue
+            elif v['_XLABEL_'] is '':
+                sg.popup_error('X-axis label field cannot be blank')
+                continue
+            elif v['_YLABEL_'] is '':
+                sg.popup_error('Y-axis label field cannot be blank')
+                continue
+            elif v['_FS_'] is '':
+                sg.popup_error('Font size of title cannot be blank')
+                continue
+            elif v['_LW_'] is '':
+                sg.popup_error('Line width field cannot be blank')
+                continue
+            elif v['_FSXY_'] is '':
+                sg.popup_error('XY label font size field cannot be blank')
+                continue
+            elif v['_LZ_'] is '':
+                sg.popup_error('Legend font size field cannot be blank')
+                continue
+            if v['_SINDEX_'] is '' or v['_EINDEX_'] is '':
+                sg.popup_error('Either of the indexes are empty')
+                continue
+            fig=preview_plot(df, v['_THEME_'], v['_WIDTH_'], v['_HEIGHT_'], v['_LW_'], v['_TITLE_'], v['_FW_'], v['_FS_'],  
+                            v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LEGEND_'], v['_LZ_'],  
                             v['_XTICKS_'], v['_YTICKS_'], t_col, v['_DATA_'], int(v['_SINDEX_']), int(v['_EINDEX_']))
+            figure_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
+            window['tabgroup'].Widget.select(2)
             
 
     window.close()

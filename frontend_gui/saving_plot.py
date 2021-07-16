@@ -15,10 +15,10 @@ def save_plot_dashboard(fig):
     #sg.InputText(key='Save As', do_not_clear=False, enable_events=True, visible=False),
     #sg.FileSaveAs(initial_folder='/tmp')]]
 
-
-
-    dirname = sg.popup_get_folder('Please choose a folder to save the plots') ##extremely useful element in pysimplegui
-
+    try:
+        dirname = sg.popup_get_folder('Please choose a folder to save the plots') ##extremely useful element in pysimplegui
+    except TypeError:
+        return
     ##more formats can be added based on the user's requirements
     combolayout=[[sg.Combo(['PNG', 'JPEG', 'TIFF', 'PDF'], default_value='PNG', readonly=True, key='-LB-')]] 
 
