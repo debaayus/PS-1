@@ -306,11 +306,14 @@ def data_matrix_landing(df, dat_col):
                 ##                                 type of matrix can directly be passed to the parameter list
                 
                 dm=options(dm, flag, 1)
-                if dm.empty:
+                try:
+                    if dm.empty:
+                        continue
+                except TypeError:
+                    sg.popup_error('No data matrix received')
                     continue
-                else:
-                    window.close()
-                    return dm
+                window.close()
+                return dm
     window.close()
     return
 

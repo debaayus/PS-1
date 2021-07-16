@@ -116,7 +116,7 @@ def matrix_type1(df,list_poi,gap,points,sensor_name):
     area = integral_area(sensor,poi,df,points,gap)
     Ratio = 1-sens
     sens *=100
-    features = [[sens,recslope,resslope,restime,rectime,area,Ratio]]
+    features = [[sens,recslope,resslope,rectime,restime,area,Ratio]]
     df1 = pd.DataFrame(features,columns=['Response(in %)','Recovery Slope', 'Response Slope', 'Recovery Time', 'Response Time', 'Integral Area','Ratio'])
     for i in range(1,num_poi):
         poi = list_poi[i]//gap

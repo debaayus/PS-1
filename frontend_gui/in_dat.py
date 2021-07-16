@@ -359,7 +359,6 @@ def t1(dm, fn):
                 sg.popup_error('Sensor name field is empty')
                 continue
             window.close()
-            dm.insert(0, values['_COL_'], conc)
             dm=options(dm, 0, 1)
             return (dm, values['_SENSORNAME_']) 
     window.close()
