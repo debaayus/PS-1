@@ -3,10 +3,8 @@ import pandas as pd
 import numpy as np
 from tkinter.font import Font
 from frontend_gui.saving_data import save_data_dash
-from frontend_gui.plotting import conc_feature_plot_dash_type1
-from frontend_gui.plotting import conc_feature_plot_dash_type2
 from backend import feature_extraction
-
+from frontend_gui.plotting import conc_feature_plot_dash
 """
 def type1(df, dat_col):
     y_cols=df.columns[(int(dat_col)-1): df.shape[1]].tolist()
@@ -82,6 +80,142 @@ def type2(df, dat_col, features):
 """
 
 def options(dm, flag, typemat):
+    dm=dm.reset_index()
+    header_list = list(dm.columns)
+    data = dm[0:].values.tolist()
+    dm=dm.set_index(dm.columns[0])
+
+    font_family, font_size = font = ('Helvetica', 10)
+    sg.set_options(font=font)
+    
+    table_layout=[
+    [sg.Table(values=data, headings=header_list,
+        enable_events=False, key='_TABLE_', 
+        auto_size_columns=False,  justification='left',    
+        hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=False
+    )],
+    [sg.Button('Save data matrix')]]
+    
+    index_change_layout = [
+    [sg.Text('Enter the analyte/gas index separated by commas in a sequence. Expected number of arguments are {}'.format(dm.shape[0]), size=(50,2)), sg.Input(key='_NEWIND_', enable_events=True)],
+    [sg.Text('Please go to the current data matrix tab once you press submit')],
+    [sg.Text('Press submit to view the modified matrix with the new index'), sg.Button('Submit new index')]]
+
+    column_add_layout=[[sg.Text('If you wish to visualize concentration and a feature in a plot, please add the concentration column if not already present. You may also add other columns', size=(85,2))],
+    [sg.Text('Enter the name of the column to be inserted', size=(50,1)), sg.Input(key='_COL_', enable_events=True)],
+    [sg.Text('Enter the new values in sequence separated by commas. The number of values entered must match the number of rows in your data matrix. Expected number of entries are {}'.format(dm.shape[0]), size=(50,4)), sg.Input(key='_VAL_', enable_events=True)],
+    [sg.Text('Please go to the current data matrix tab once you press submit')],
+    [sg.Text('Press submit to view the modified matrix with the new column'), sg.Button('Submit new column')]]
+
+    if typemat==1:
+        paramlay=[[sg.Text('This will take you to the concentration feature plotting dashboard provided that you have added a concentration column to your data matrix', size=(85,2))],
+        [sg.Text('Enter the column number of the first feature column(e.g. 3 for the 3rd column, minimum value=3 as index and concentration columns must preceed sensor columns)', size=(45,3)), sg.Input(key='_FEASTART_', enable_events=True)],
+        [sg.Button('Concentration feature plotting dashboard')]]
+    elif typemat==2:
+        paramlay=[[sg.Text('This will take you to the concentration feature plotting dashboard provided that you have added a concentration column to your data matrix', size=(85,2))],
+        [sg.Text('Enter the column number of the first sensor column(e.g., 3 for the 3rd column, Minimum value=3 as index and concentration columns must preceed feature columns)', size=(45,3)), sg.Input(key='_SENSTART_', enable_events=True)],
+        [sg.Button('Concentration feature plotting dashboard')]]
+
+    next_step_layout=[[sg.Text('Choose one of these options for the next dashboard')],
+    [sg.Frame('Concentration Feature Dashboard parameter', layout=paramlay)],
+    [sg.Text('This will skip the plotting dashboard and directly move to the Machine Learning module'),sg.Button('ML algorithm application Dashboard')]]
+        
+
+
+
+    if flag==1:
+        if typemat==1:
+            layout=[[sg.TabGroup([[sg.Tab('Current Data matrix', layout=table_layout, key='table')] ,[sg.Tab('Change of index column', layout=index_change_layout, key='indchange')], 
+            [sg.Tab('Add column/concentration data', layout=column_add_layout, key='add')], [sg.Tab('Next', layout=next_step_layout, key='next')]], key='tabgroup', enable_events=True)]]
+        elif typemat==2:
+            layout=[[sg.TabGroup([[sg.Tab('Current Data matrix', layout=table_layout, key='table')] ,[sg.Tab('Change of index column', layout=index_change_layout, key='indchange')], 
+            [sg.Tab('Add column/concentration data', layout=column_add_layout, key='add')], [sg.Tab('Next', layout=next_step_layout, key='next')]], key='tabgroup', enable_events=True)]]
+    elif flag==0:
+        if typemat==1:
+            layout=[[sg.TabGroup([[sg.Tab('Current Data matrix', layout=table_layout, key='table')] ,[sg.Tab('Change of index column', layout=index_change_layout, key='indchange')], 
+            [sg.Tab('Add column/concentration data', layout=column_add_layout, key='add')], [sg.Tab('Next', layout=next_step_layout, key='next')]], key='tabgroup', enable_events=True)]]
+        elif typemat==2:
+            layout=[[sg.TabGroup([[sg.Tab('Current Data matrix', layout=table_layout, key='table')] ,[sg.Tab('Change of index column', layout=index_change_layout, key='indchange')], 
+            [sg.Tab('Add column/concentration data', layout=column_add_layout, key='add')], [sg.Tab('Next', layout=next_step_layout, key='next')]], key='tabgroup', enable_events=True)]]
+
+
+        
+    window = sg.Window('Data matrix dashboard', layout=layout, grab_anywhere=False, finalize=True, size=(800,600))
+    window['tabgroup'].Widget.select(0)
+
+
+    while True:
+        event, values= window.read()
+        if event==sg.WIN_CLOSED:
+            window.close()
+            break
+        
+        if event=='Save data matrix':
+            save_data_dash(dm)
+            continue
+
+        elif event=='Submit new index':
+            if values['_NEWIND_'] is '':
+                sg.popup_error('Index column field is empty')
+                continue
+            new_index=np.array([x.strip() for x in values['_NEWIND_'].split(',')])
+            if len(new_index) != dm.shape[0]:
+                sg.popup_error("Number of arguments does not match the shape of the data matrix")
+                continue
+            dm=dm.reset_index()
+            dm=dm.drop(dm.columns[0], axis=1)
+            dm=dm.set_index(new_index, "index")
+            window.close()
+            dm=options(dm, flag, typemat)
+            return dm
+
+        elif event=='ML algorithm application Dashboard':
+            window.close()
+            return dm
+
+        elif event=='Concentration feature plotting dashboard':
+            prompt=sg.popup_yes_no('Does your data matrix have concentration data?')
+            if prompt=='Yes':
+                if typemat==1:
+                    try:
+                        fea_start=values['_FEASTART_']
+                        conc_feature_plot_dash(dm, 1, int(fea_start)-2)
+                        window.close()
+                        break
+                    except TypeError:
+                        window.close()
+                        break
+                else:
+                    try:
+                        sensor_start=values['_SENSTART_']
+                        conc_feature_plot_dash(dm, 2, int(sensor_start)-2)
+                        window.close()
+                        break
+                    except TypeError:
+                        window.close()
+                        break
+            else:
+                sg.popup_error('Please add concentration data using the dashboard')
+                continue
+        elif event=='Submit new column':
+            conc1= [x.strip() for x in values['_VAL_'].split(',')]
+            conc=[float(i) for i in conc1]
+            if len(conc) != dm.shape[0]:
+                sg.popup_error("Number of arguments does not match the shape of the data matrix")
+                continue
+            else:
+                dm.insert(0, values['_COL_'], conc)
+                window.close()
+                dm=options(dm, flag, typemat)
+                return dm
+    return dm
+
+
+
+
+
+"""
+
     if flag==0:
         layout = [[sg.Button('View current data matrix')], [sg.Button('Change index column')], [sg.Button('Confirm data matrix for application of ML algorithms')], [sg.Button('Add concentration data')], [sg.Button('Concentration Plotting Dashboard')]]
     elif flag==1:
@@ -162,6 +296,7 @@ def options(dm, flag, typemat):
 
 
 
+
 def data_matrix_table(dm):
     ## ask if they want to change index in the data matrix created
     dm=dm.reset_index()
@@ -187,14 +322,14 @@ def data_matrix_table(dm):
                    layout=layout, finalize=True)
 
 # Set real table width after here
-    """window.TKroot.update()
+    window.TKroot.update()
     tree = window['_TABLE_'].Widget
     tkfont = Font(family=font_family, size=font_size)
     data_array = np.array([header_list]+data)
     column_widths = [max(map(lambda item:tkfont.measure(item), data_array[:, i]))
     for i in range(data_array.shape[1])]
     for heading, width in zip(header_list, column_widths):
-        tree.column(heading, width=width+font_size+20)"""
+        tree.column(heading, width=width+font_size+20)
 
     while True:
         event, values= window.read()
@@ -237,9 +372,9 @@ def conc_append(dm):
     return
 
 
+"""
 
-
-def data_matrix_landing(df, dat_col):
+def data_matrix_landing(df, dat_col, header_list, data, ty, dm):
     ##Explain what is type 1 matrix and what is type 2 matrix. Try embedding a picture for reference
     ##Integrate landing page and dm_type() for better looks. Use data_matrix landing page to ask for poi input/ or whatever automation.
     ##Option 1: ## call backend feature extraction method. (Figure this out)
@@ -251,10 +386,10 @@ def data_matrix_landing(df, dat_col):
     ##table display tab
     font_family, font_size = font = ('Helvetica', 10)
     sg.set_options(font=font)
-    df2=df.copy()
-    df2.reset_index()
-    header_list_final = list(df2.columns) 
-    data_final = (df2[0:].values.tolist())
+    df=df.reset_index()
+    header_list_final = list(df.columns)
+    data_final = df[0:].values.tolist()
+    df=df.set_index(df.columns[0])
     
     frm_input_layout = [
     [sg.Table(values=data_final, headings=header_list_final,
@@ -266,13 +401,13 @@ def data_matrix_landing(df, dat_col):
     ###
 
     
-    explainertab=[[sg.Text('Type I: This type of matrix will extract your chosen features for every signal(every injection) of a single sensor from your response data', size=(50,4))],
-                [sg.Text('Type II: This type of matrix will extract one feature for every signal(every injection) of the chosen sensors from your response data', size=(50,4))]]
+    explainertab=[[sg.Text('Type I(All Features One Sensor): All the features are extracted for a single chosen sensor (based on the points of injection provided)')],
+    [sg.Text('Type II(One Feature All Sensors): One chosen feature is extracted for multiple sensors (based on the points of injection provided)')]]
 
     flag=1
 
-    parameters=[[sg.Text('Enter the points of injection(integers; corresponding to the number of signals) based on the the timestamp column of your response data. If timestamp is not available, enter POIs using index column and enter the gap as 1. The points of injection must be separated by commas', size=(50,5)), sg.Input(key='_POI_', enable_events=True)],
-    [sg.Text('Enter the gap(in seconds) between each data point. If no time reference available, please enter 1', size=(50,3)), sg.Input(key='_GAP_', enable_events=True)]
+    parameters=[[sg.Text('Enter the points of injection(integers; no. of entries correspond to the number of signals) based on the the timestamp column of your response data. The points of injection must be separated by commas', size=(50,3)), sg.Input(key='_POI_', enable_events=True)],
+    [sg.Text('Enter the gap(in seconds) between each data point:', size=(50,1)), sg.Input(key='_GAP_', enable_events=True)]
     ]
 
 
@@ -290,31 +425,41 @@ def data_matrix_landing(df, dat_col):
 
     layout_type1=[[sg.Frame('Sensor', layout=layout1_type1)],
     [sg.Frame('Features', layout=layout2_type1)],
-    [sg.Button('Proceed to Type I data matrix computation')]]
+    [sg.Text('Please go to the data matrix tab once you press compute')],
+    [sg.Button('Compute Type I data matrix')]]
 
 
     layout1_type2=[[sg.Text('Choose the feature for which the data matrix needs to be created')],
     [sg.Combo(values=features, default_value=features[0], key='_FEATURE_', size=(30, 6), readonly=True)],
     [sg.Text('Enter the number of sensors in your array. Please do not include empty columns in your count', size=(50,2)), sg.Input(key='_TOTALSENSORS_', enable_events=True)]]
 
-    
-    layout2_type2=[[sg.Text('The chosen feature will be extracted for all signals(based on the POI) for all sensors in the array', size=(50,1))],
-    [sg.Text('These are the sensors which will be used for the feature matrix')]]
+    lay2=''
     for val in y_cols:
-        lay=[sg.Text('{}'.format(val))]
-        layout2_type2.append(lay)
+        lay2=lay2+' '+val
+
+    layout2_type2=[[sg.Text('The chosen feature will be extracted for all signals(based on the POI) for all sensors in the array', size=(50,1))],
+    [sg.Text('These are the sensors which will be used for the feature matrix:')],
+    [sg.Text(lay2, size=(85,3))]]
+    
+        
 
 
     layout_type2=[[sg.Frame('Feature', layout=layout1_type2)],
     [sg.Frame('Sensors', layout=layout2_type2)],
-    [sg.Button('Proceed to data matrix Type II computation')]]
+    [sg.Text('Please go to the data matrix tab once you press compute')],
+    [sg.Button('Compute Type II data matrix')]]
 
-    layout=[[sg.TabGroup([[sg.Tab('Explainer Tab', layout=explainertab)], [sg.Tab('Response data', layout=frm_input_layout)], [sg.Tab('Basic Input', layout=parameters)], [sg.Tab('Type I matrix computation', layout=layout_type1)], [sg.Tab('Type II matrix computation', layout=layout_type2)] ])]]
+
+
+    layout=[[sg.TabGroup([[sg.Tab('Explainer Tab', layout=explainertab, key='explainer')], [sg.Tab('Response data', layout=frm_input_layout, key='response')], [sg.Tab('Basic Input', layout=parameters, key='param')], 
+        [sg.Tab('Type I matrix computation', layout=layout_type1, key='type1param')], [sg.Tab('Type II matrix computation', layout=layout_type2, key='type2 param')] ], key='tabgroup', enable_events=True)]]
 
     
-    window = sg.Window("Feature Extraction and Data Matrix extraction", auto_size_text=True, auto_size_buttons=True,
+    window = sg.Window("Feature Extraction and Data Matrix creation", auto_size_text=True, auto_size_buttons=True,
                    grab_anywhere=True, resizable=False,
-                   layout=layout, finalize=True,size=(800, 600))
+                   layout=layout, finalize=True,size=(800, 700))
+
+    window['tabgroup'].Widget.select(0)
 
     ### table helper method
     window.TKroot.update()
@@ -336,8 +481,9 @@ def data_matrix_landing(df, dat_col):
     while True:
         event, values=window.Read()
         if event==sg.WIN_CLOSED:
+            window.close()
             break
-        if event=='Proceed to Type I data matrix computation':
+        if event=='Compute Type I data matrix':
             if values['_POI_'] is '' or values['_GAP_'] is '':
                 sg.popup_error('POI or Gap fields are empty. Please fill these mandatory parameters')
                 continue
@@ -349,14 +495,21 @@ def data_matrix_landing(df, dat_col):
             if values['_TIMETYPE1_'] is '':
                 sg.popup_error('Integral Area parameter empty')
                 continue
-
-            dm=feature_extraction.matrix_type1(df, poi_list, gap, int(values['_TIMETYPE1_']), values['_SENSOR_'])
-            ##error catching needed here
-            dm=options(dm, flag, 1)
+            try:
+                dm=feature_extraction.matrix_type1(df, poi_list, gap, int(values['_TIMETYPE1_']), values['_SENSOR_'])
+            except TypeError:
+                continue
+            dm=dm.reset_index()
+            header_list = list(dm.columns)
+            data = dm[0:].values.tolist()
+            dm=dm.set_index(dm.columns[0])
+            ty=1
             window.close()
+            dm=options(dm, flag, 1)
             return dm
+            
 
-        elif event=='Proceed to Type II data matrix computation':
+        elif event=='Compute Type II data matrix':
             if values['_POI_'] is '' or values['_GAP_'] is '':
                 sg.popup_error('POI or Gap fields are empty. Please fill these mandatory parameters')
                 continue
@@ -370,18 +523,30 @@ def data_matrix_landing(df, dat_col):
                 continue
 
             if values['_FEATURE_']=='Integral Area':
-                timeintegral=sg.popup_get_text('Since you have chosen integral area, please enter the number of seconds to calculate the integral area')
-                ##error catching needed here
+                try: 
+                    timeintegral=int(sg.popup_get_text('Since you have chosen integral area, please enter the number of seconds to calculate the integral area'))
+                except TypeError:
+                    continue
                 if timeintegral is '':
                     sg.popup_error('Empty field received')
                     continue
+                dm=feature_extraction.matrix_type2(values['_FEATURE_'], df, poi_list, gap, int(values['_TOTALSENSORS_']), dat_col, timeintegral)
 
-            dm=feature_extraction.matrix_type2(values['_FEATURE_'], df, poi_list, gap, int(values['_TOTALSENSORS_']), dat_col, time)
+            else:
+                try: 
+                    dm=feature_extraction.matrix_type2(values['_FEATURE_'], df, poi_list, gap, int(values['_TOTALSENSORS_']), dat_col, 0)
+                except TypeError:
+                    continue
             ##error catching needed here
+            dm=dm.reset_index()
+            header_list = list(dm.columns)
+            data = dm[0:].values.tolist()
+            dm=dm.set_index(dm.columns[0])
+            ty=2
             dm=options(dm, flag, 2)
-            window.close()
             return dm
 
-    window.close()
-    return
+
+
+    return dm
 

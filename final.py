@@ -53,7 +53,15 @@ def foo():
     
     if flag==1:
         plotting.customized_plotting_dashboard(df, t_col_no, dat_col)
-        dm=data_matrix_viz.data_matrix_landing(df, dat_col)
+        header_list=[]
+        data=[[]]
+        ty=0
+        dm=[[]]
+        dm=data_matrix_viz.data_matrix_landing(df, dat_col, header_list, data, ty, dm)
+
+    if flag==2:
+        print(dm) 
+
         
         #while True:
             #data_matrix_viz.data_matrix_landing(df, dat_col)
