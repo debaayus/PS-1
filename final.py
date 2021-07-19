@@ -53,11 +53,21 @@ def foo():
     
     if flag==1:
         plotting.customized_plotting_dashboard(df, t_col_no, dat_col)
-        header_list=[]
-        data=[[]]
-        ty=0
-        dm=[[]]
-        dm=data_matrix_viz.data_matrix_landing(df, dat_col, header_list, data, ty, dm)
+        dm=1
+        while dm==1:            
+                header_list=[]
+                data=[[]]
+                ty=0
+                dm=[[]]
+                dm=data_matrix_viz.data_matrix_landing(df, dat_col, header_list, data, ty, dm)
+                try:
+                    if dm==1:
+                        print("triggered")
+                        continue
+                except ValueError:
+                    break
+
+
 
     if flag==2:
         print(dm) 

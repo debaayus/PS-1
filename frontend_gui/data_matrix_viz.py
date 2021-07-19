@@ -98,27 +98,17 @@ def options(dm, flag, typemat):
     
     index_change_layout = [
     [sg.Text('Enter the analyte/gas index separated by commas in a sequence. Expected number of arguments are {}'.format(dm.shape[0]), size=(50,2)), sg.Input(key='_NEWIND_', enable_events=True)],
-    [sg.Text('Please go to the current data matrix tab once you press submit')],
     [sg.Text('Press submit to view the modified matrix with the new index'), sg.Button('Submit new index')]]
 
-    column_add_layout=[[sg.Text('If you wish to visualize concentration and a feature in a plot, please add the concentration column if not already present. You may also add other columns', size=(85,2))],
+    column_add_layout=[[sg.Text('Add concentration column details, otherwise not present in initial data', size=(85,2))],
     [sg.Text('Enter the name of the column to be inserted', size=(50,1)), sg.Input(key='_COL_', enable_events=True)],
     [sg.Text('Enter the new values in sequence separated by commas. The number of values entered must match the number of rows in your data matrix. Expected number of entries are {}'.format(dm.shape[0]), size=(50,4)), sg.Input(key='_VAL_', enable_events=True)],
-    [sg.Text('Please go to the current data matrix tab once you press submit')],
     [sg.Text('Press submit to view the modified matrix with the new column'), sg.Button('Submit new column')]]
 
-    if typemat==1:
-        paramlay=[[sg.Text('This will take you to the concentration feature plotting dashboard provided that you have added a concentration column to your data matrix', size=(85,2))],
-        [sg.Text('Enter the column number of the first feature column(e.g. 3 for the 3rd column, minimum value=3 as index and concentration columns must preceed sensor columns)', size=(45,3)), sg.Input(key='_FEASTART_', enable_events=True)],
-        [sg.Button('Concentration feature plotting dashboard')]]
-    elif typemat==2:
-        paramlay=[[sg.Text('This will take you to the concentration feature plotting dashboard provided that you have added a concentration column to your data matrix', size=(85,2))],
-        [sg.Text('Enter the column number of the first sensor column(e.g., 3 for the 3rd column, Minimum value=3 as index and concentration columns must preceed feature columns)', size=(45,3)), sg.Input(key='_SENSTART_', enable_events=True)],
-        [sg.Button('Concentration feature plotting dashboard')]]
 
     next_step_layout=[[sg.Text('Choose one of these options for the next dashboard')],
-    [sg.Frame('Concentration Feature Dashboard parameter', layout=paramlay)],
-    [sg.Text('This will skip the plotting dashboard and directly move to the Machine Learning module'),sg.Button('ML algorithm application Dashboard')]]
+    [sg.Text('Press this button to go to the Feature plotting Dashboard', size=(60,1)), sg.Button('Feature Plotting Dashboard')],
+    [sg.Text('This will skip the plotting dashboard and directly move to the Machine Learning module', size=(60,1)),sg.Button('ML algorithm application Dashboard')]]
         
 
 
@@ -126,10 +116,14 @@ def options(dm, flag, typemat):
     if flag==1:
         if typemat==1:
             layout=[[sg.TabGroup([[sg.Tab('Current Data matrix', layout=table_layout, key='table')] ,[sg.Tab('Change of index column', layout=index_change_layout, key='indchange')], 
-            [sg.Tab('Add column/concentration data', layout=column_add_layout, key='add')], [sg.Tab('Next', layout=next_step_layout, key='next')]], key='tabgroup', enable_events=True)]]
+            [sg.Tab('Add column/concentration data', layout=column_add_layout, key='add')], [sg.Tab('Next', layout=next_step_layout, key='next')]], key='tabgroup', enable_events=True)],
+            [sg.Text('', size=(80,3))],
+            [sg.Text('Press Reset to clear the current data matrix and go back to the feature extraction dashboard'), sg.Button('Reset')]]
         elif typemat==2:
             layout=[[sg.TabGroup([[sg.Tab('Current Data matrix', layout=table_layout, key='table')] ,[sg.Tab('Change of index column', layout=index_change_layout, key='indchange')], 
-            [sg.Tab('Add column/concentration data', layout=column_add_layout, key='add')], [sg.Tab('Next', layout=next_step_layout, key='next')]], key='tabgroup', enable_events=True)]]
+            [sg.Tab('Add column/concentration data', layout=column_add_layout, key='add')], [sg.Tab('Next', layout=next_step_layout, key='next')]], key='tabgroup', enable_events=True)],
+            [sg.Text('', size=(80,3))],
+            [sg.Text('Press Reset to clear the current data matrix and go back to the feature extraction dashboard'), sg.Button('Reset')]]
     elif flag==0:
         if typemat==1:
             layout=[[sg.TabGroup([[sg.Tab('Current Data matrix', layout=table_layout, key='table')] ,[sg.Tab('Change of index column', layout=index_change_layout, key='indchange')], 
@@ -139,7 +133,7 @@ def options(dm, flag, typemat):
             [sg.Tab('Add column/concentration data', layout=column_add_layout, key='add')], [sg.Tab('Next', layout=next_step_layout, key='next')]], key='tabgroup', enable_events=True)]]
 
 
-        
+       
     window = sg.Window('Data matrix dashboard', layout=layout, grab_anywhere=False, finalize=True, size=(800,600))
     window['tabgroup'].Widget.select(0)
 
@@ -173,30 +167,12 @@ def options(dm, flag, typemat):
             window.close()
             return dm
 
-        elif event=='Concentration feature plotting dashboard':
-            prompt=sg.popup_yes_no('Does your data matrix have concentration data?')
-            if prompt=='Yes':
+        elif event=='Feature Plotting Dashboard':
                 if typemat==1:
-                    try:
-                        fea_start=values['_FEASTART_']
-                        conc_feature_plot_dash(dm, 1, int(fea_start)-2)
-                        window.close()
-                        break
-                    except TypeError:
-                        window.close()
-                        break
+                        conc_feature_plot_dash(dm, 1)
+                    
                 else:
-                    try:
-                        sensor_start=values['_SENSTART_']
-                        conc_feature_plot_dash(dm, 2, int(sensor_start)-2)
-                        window.close()
-                        break
-                    except TypeError:
-                        window.close()
-                        break
-            else:
-                sg.popup_error('Please add concentration data using the dashboard')
-                continue
+                        conc_feature_plot_dash(dm, 2)
         elif event=='Submit new column':
             conc1= [x.strip() for x in values['_VAL_'].split(',')]
             conc=[float(i) for i in conc1]
@@ -208,6 +184,9 @@ def options(dm, flag, typemat):
                 window.close()
                 dm=options(dm, flag, typemat)
                 return dm
+        elif event=='Reset':
+            window.close()
+            return 1
     return dm
 
 
@@ -395,19 +374,21 @@ def data_matrix_landing(df, dat_col, header_list, data, ty, dm):
     [sg.Table(values=data_final, headings=header_list_final,
         enable_events=False, key='_TABLE_', 
         auto_size_columns=True,  justification='left',    
-        hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=False
+        hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=False, size=(100, 20)
     )]]
 
     ###
 
     
     explainertab=[[sg.Text('Type I(All Features One Sensor): All the features are extracted for a single chosen sensor (based on the points of injection provided)')],
-    [sg.Text('Type II(One Feature All Sensors): One chosen feature is extracted for multiple sensors (based on the points of injection provided)')]]
+    [sg.Text('Type II(One Feature All Sensors): One chosen feature is extracted for multiple sensors (based on the points of injection provided)')],
+    [sg.Text('', size=(80,3))],
+    [sg.Text('The following are the features available in the extraction module', size=(80,1))],
+    [sg.Multiline("1. Response% : Differential signal normalised with respect to baseline.\n2. Response slope: Maximum rate of change of signal during response.\n3. Recovery slope: Maximum rate of change of signal during recovery.\n4. Response time: The time required for 90 %% response of sensor signal in seconds.\n5. Recovery time: The time taken for 90 %% recovery of sensor signal in seconds.\n6. Integral area: Area of the signal swept between between the times of point of injection and user defined value in seconds.", disabled=True, size=(80, 8))]]
 
     flag=1
 
-    parameters=[[sg.Text('Enter the points of injection(integers; no. of entries correspond to the number of signals) based on the the timestamp column of your response data. The points of injection must be separated by commas', size=(50,3)), sg.Input(key='_POI_', enable_events=True)],
-    [sg.Text('Enter the gap(in seconds) between each data point:', size=(50,1)), sg.Input(key='_GAP_', enable_events=True)]
+    parameters=[[sg.Text('Enter the points of injection(integers; no. of entries correspond to the number of signals) based on the index column of your response data. The points of injection must be separated by commas', size=(50,3)), sg.Input(key='_POI_', enable_events=True)]
     ]
 
 
@@ -457,7 +438,7 @@ def data_matrix_landing(df, dat_col, header_list, data, ty, dm):
     
     window = sg.Window("Feature Extraction and Data Matrix creation", auto_size_text=True, auto_size_buttons=True,
                    grab_anywhere=True, resizable=False,
-                   layout=layout, finalize=True,size=(800, 700))
+                   layout=layout, finalize=True,size=(1000, 600))
 
     window['tabgroup'].Widget.select(0)
 
@@ -484,13 +465,13 @@ def data_matrix_landing(df, dat_col, header_list, data, ty, dm):
             window.close()
             break
         if event=='Compute Type I data matrix':
-            if values['_POI_'] is '' or values['_GAP_'] is '':
-                sg.popup_error('POI or Gap fields are empty. Please fill these mandatory parameters')
+            if values['_POI_'] is '':
+                sg.popup_error('POI field is empty. Please fill the mandatory parameter')
                 continue
             
             poi_string_list=[x.strip() for x in values['_POI_'].split(',')]
             poi_list=[int(i) for i in poi_string_list]
-            gap=int(values['_GAP_'])
+            gap=1
 
             if values['_TIMETYPE1_'] is '':
                 sg.popup_error('Integral Area parameter empty')
@@ -499,24 +480,22 @@ def data_matrix_landing(df, dat_col, header_list, data, ty, dm):
                 dm=feature_extraction.matrix_type1(df, poi_list, gap, int(values['_TIMETYPE1_']), values['_SENSOR_'])
             except TypeError:
                 continue
-            dm=dm.reset_index()
-            header_list = list(dm.columns)
-            data = dm[0:].values.tolist()
-            dm=dm.set_index(dm.columns[0])
             ty=1
             window.close()
+            
             dm=options(dm, flag, 1)
+            
             return dm
             
 
         elif event=='Compute Type II data matrix':
-            if values['_POI_'] is '' or values['_GAP_'] is '':
-                sg.popup_error('POI or Gap fields are empty. Please fill these mandatory parameters')
+            if values['_POI_'] is '':
+                sg.popup_error('POI field is empty. Please fill the mandatory parameter')
                 continue
             
             poi_string_list=[x.strip() for x in values['_POI_'].split(',')]
             poi_list=[int(i) for i in poi_string_list]
-            gap=int(values['_GAP_'])
+            gap=1
             
             if values['_TOTALSENSORS_'] is '':
                 sg.popup_error('Total number of sensors field is empty')
@@ -538,11 +517,9 @@ def data_matrix_landing(df, dat_col, header_list, data, ty, dm):
                 except TypeError:
                     continue
             ##error catching needed here
-            dm=dm.reset_index()
-            header_list = list(dm.columns)
-            data = dm[0:].values.tolist()
-            dm=dm.set_index(dm.columns[0])
+            
             ty=2
+            window.close()
             dm=options(dm, flag, 2)
             return dm
 

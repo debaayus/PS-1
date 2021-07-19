@@ -160,7 +160,7 @@ def matrix_type2(feature,df,list_poi,gap,total_sensor, dat_col, points):
             for i in range (start,start+total_sensor):
                 sens.append(find_sensitivity(i,poi,df,next)*100)
             df1=df1.append(pd.DataFrame([sens],columns=column_name),ignore_index=True)
-    elif feature=='Recovery Slope':
+    elif feature=='Response Slope':
         for i in range(num_poi):
             poi = list_poi[i]//gap
             if i+1==num_poi:
@@ -171,7 +171,7 @@ def matrix_type2(feature,df,list_poi,gap,total_sensor, dat_col, points):
             for i in range (start,start+total_sensor):
                 sens.append(response_slope(i,poi,df,next,gap))
             df1=df1.append(pd.DataFrame([sens],columns=column_name),ignore_index=True)
-    elif feature=='Response Slope':
+    elif feature=='Recovery Slope':
         for i in range(num_poi):
             poi = list_poi[i]//gap
             if i+1==num_poi:
