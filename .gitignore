@@ -1,1 +1,4 @@
-C:\Users\debaa\Documents\PS-1\test_data
+test_data
+__pycache__
+frontend_gui/__pycache__
+backend/__pycache__
