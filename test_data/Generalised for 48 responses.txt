@@ -1,0 +1,271 @@
+
+#to get working directory and create a folder to save plots and csv files:
+p=getwd() #gets working directory
+dir.create(path=paste(p,"/Sensors",sep=""))  
+# creates a folder to store all csv files
+
+#reading data:
+df<-read.csv("10082020_eliminated.csv",sep="|",header=1) #to read data 
+df<-as.data.frame(df)
+
+poi<-read.csv("Cycle_details.csv",sep="|")
+poi<-as.data.frame(poi)
+
+#time vector
+y<-c(seq(0,3*nrow(df)-1,by=3.00))
+df<-cbind(y,df)
+
+#defining composition
+composition<-c("0 NH3-500 H2","0 NH3-250 H2","0 NH3-750 H2","0NH3-1000 H2",
+               "250NH3-0 H2","500 NH3-0 H2","750NH3-0 H2","1000NH3-0 H2",
+               "250 NH3-250 H2","250NH3-500 H2","250NH3-750 H2","250NH3-1000 H2",
+               "500 NH3-250 H2","500 NH3-500 H2","500 NH3-750 H2","500 NH3-1000 H2",
+               "750 NH3- 250H2","750 NH3- 500H2","750 NH3- 750H2","750 NH3- 1000H2",
+               "1000 NH3- 250H2","1000 NH3- 500H2","1000 NH3- 750H2","1000 NH3- 1000H2","0NH3-0H2")
+
+#calculated the gradient
+grad<-function(x)
+{
+  del<-diff(x)/3  #delt=const=3seconds
+  return(del)
+  
+}
+
+#calculates the z_score
+z_score<-function(x)
+{
+  y<-(x-mean(x))/sd(x)
+  return(y)
+}
+
+#feature extraction function
+feature<-function(x,p,n)
+{
+  grad_x<-grad(x[[2]]) #gradient of sensor data
+  
+  #poi
+  l<-90
+  
+  
+  tip<-which.min(x[100:145,2])+99 #the tip falls after the poi
+  
+  r<-range(grad_x)
+  response<-r[1]
+  recovery<-r[2]        
+  #gives response and recovery slopes
+  
+  
+  
+  baseline<-mean(x[l-30:l,2]) # l is the point of injection
+  i<-c(0)
+  sens<-c(0)
+  for (i in (1:nrow(x)))
+  {
+    sens[i]<-(abs(x[i,2]-baseline))/baseline
+  }
+  senstivity<-max(sens)
+  
+
+  #response time:
+  delR<-(baseline-x[tip,2])*0.90
+  R90<-x[l,2]-delR
+  index1<-which.min(abs(x[l:tip,2]-R90))+ (l-1) #to find the range in which the point is lying
+  #nearest point will give the minimum difference
+  index2<-index1-1
+  
+  response_time<-((((R90-x[index2,2])/(x[index1,2]-x[index2,2]))*(x[index1,1]-x[index2,1])) + x[index2,1])- x[l,1]
+  
+  #interpolate
+  
+  
+  #recovery time:
+  
+  R_90<-x[tip,2]+ delR
+  
+  a1<-which.min(abs(x[tip:nrow(x),2]-R_90))+(tip-1)
+  a2<-a1-1
+  
+  recovery_time<- ((((R_90-x[a2,2])/(x[a1,2]-x[a2,2]))*(x[a1,1]-x[a2,1])) + x[a2,1])-x[tip,1]
+  
+  #area of integral
+  #Finding Integral Area for 60 sec from point of injection
+  pp <- c(x[l,1]+60,x[l,2]+20)
+  
+  LineAr <- 0.5*(pp[2]+x[1,2])*(pp[1]-x[1,1] )
+  
+  s <- c(0)
+  co1 <- c(1)
+  
+  for (value in x[[1]])
+  {
+    if(value>x[l,1])
+    {
+      if((value>pp[1]))
+      {
+        break
+      }
+      s=s + 0.5*(x[co1,2]+x[co1-1,2])*(x[co1,1]-x[co1-1,1])
+    }
+    co1=co1 + 1
+  }
+  CurveAr <- s 
+  
+  #Finding integral area using the line and the curve
+  IntegralArea <- abs(LineAr-CurveAr)
+  
+  #returns the features
+  f<-cbind(senstivity,response,recovery,response_time,recovery_time,IntegralArea)
+  return(f)
+  
+}
+
+#to create data matrices
+
+sensors<-list()  #a list that stores data matrices of 8 sensors
+
+#creates a pdf file in the folder Sensors , to store all plots
+pdf(file = paste(p,"/Sensors/plot.pdf",sep=""))
+for(j in 2:9)
+{
+  x<-select(df,1,j)
+  
+  #to pass argument to the function and create a data matrix
+  i<-c()
+  b<-c(0)
+  for(i in 1:48)
+  {
+    if(i==48)
+    {
+      dat<-feature(x[poi[i,1]:nrow(x),],i,j-1)
+      plot(x[poi[i,1]:nrow(x),1],x[poi[i,1]:nrow(x),2],
+           type="l",main=i,
+           sub=paste("Sensor",j-1,sep=" "),
+           xlab="time",ylab="Resistance")
+    }
+    else
+      
+    {
+      dat<-feature(x[poi[i,1]:poi[i,3],],i,j-1)
+      plot(x[poi[i,1]:poi[i,3],1],x[poi[i,1]:poi[i,3],2],
+           type="l",main=i,
+           sub=paste("Sensor",j-1,sep=" "),
+           xlab="time",ylab="Resistance")
+    }
+    if(b==0)
+    {
+      sensors[[j-1]]<-dat
+    }
+    else
+    {
+      sensors[[j-1]]<-rbind(sensors[[j-1]],dat)
+
+    }
+    b<-b+1
+    
+  }
+}
+dev.off() #to terminate printing of plots in the pdf file.
+
+#assigning composition :
+for(j in 1:8)
+{
+  #converting the data type to data frame
+  sensors[[j]]<-as.data.frame(sensors[[j]])
+  colnames(sensors[[j]])<-c("senstivity","response","recovery","response time","recovery time","integral area")
+  
+  
+  signals<-c(paste("signal",1:48,sep=""))
+  sensors[[j]]<-cbind(signals,sensors[[j]])
+  
+  
+  #assigning composition
+  k<-c(1)
+  for(i in seq(1,48, by=2))
+  {
+    if(i==47)
+    {
+      sensors[[j]]$composition[(i):48]<-composition[48/2]
+      break
+    }
+    else
+    {
+      sensors[[j]]$composition[i:(i+2)]<-composition[k]
+      k<-k+1
+    }
+  }
+  
+}
+
+#sensors is now a list of 8 data frames
+names(sensors)<-c("sensor1","sensor2","sensor3","sensor4",
+                  "sensor5","sensor6","sensor7","sensor8")
+
+#storing data matrices as csv files in folder "Sensors" in the working directory:
+for(j in 1:8)
+{
+  write.csv(sensors[j],file = paste(p,"/Sensors","/Sensor",j,".csv",sep = ""))
+  #stores all data matrices in the form of csv in Sensors folder
+}
+
+#now creating a list of pca data of 8 sensors
+pca<-list()
+for(j in 1:8)
+{
+  pca[[j]]<-princomp(sensors[[j]][,2:7],cor=T)
+  
+}
+
+names(pca)<-c("pca1","pca2","pca3","pca4","pca5","pca6","pca7","pca8")
+
+#color palettes:
+
+Palette1 <- c("#66c2a5","#fc8d62","#8da0cb","#37de0d","#eaf20a",
+              "#ff9305","#f70505","darkturquoise","#066953","#0d0991",
+              "#ba0af5","#f3b0f7","#f50cc2","#ff0378","#63022f",
+              "#ffbaba","#faad69","#ffcf33","#e0ff33",'#89a106',
+              "#1ba106","#06a163","#0699a1","#3f06a1","#c9b7e8"
+)
+
+palette2<-c("dodgerblue2", "#E31A1C", # red
+            "green4",
+            "#6A3D9A", # purple
+            "#FF7F00", # orange
+            "black", "gold1",
+            "skyblue2", "#FB9A99", # lt pink
+            "palegreen2",
+            "#CAB2D6", # lt purple
+            "#FDBF6F", # lt orange
+            "gray70", "khaki2",
+            "maroon", "orchid1", "deeppink1", "blue1", "steelblue4",
+            "darkturquoise", "green1", "yellow4", "yellow3",
+            "#ba0af5", "brown")
+
+
+pdf(file = paste(p,"/Sensors/pca_plots.pdf",sep=""))
+for(j in 1:8)
+{
+  #scree plots for sensors:
+  pca.var<-pca[[j]]$sdev^2
+  pca.var.per<-round((pca.var/sum(pca.var))*100,1)
+  barplot(pca.var.per,main="scree plot",sub=paste("Sensor",j,sep=" "),
+          xlab="PC",ylab="Percent Variation",col= "darkturquoise")
+  
+  #loadings plot for 8 sensors
+  plot(pca[[j]]$loadings[,1],pca[[j]]$loadings[,2],main="loadings",
+       sub= paste("sensor",j,sep=" ") ,xlab='PC1', ylab = "PC2")+
+    text(pca[[j]]$loadings,labels = rownames(pca[[j]]$loadings),
+         cex=1.0,font=2.0,col="steelblue4")
+  
+  #plots PC2 vs PC1 for sensors
+  pca.dat<-as.data.frame(pca[[j]]$scores)
+  plot<-ggplot(pca.dat,aes(x=pca.dat[,1], y=pca.dat[,2],
+                           colour = sensors[[j]]$composition))+
+    geom_point()  +
+    ggtitle("PC2 VS PC1",subtitle = paste("Sensor",j,sep=" "))+ 
+    labs(x="PC1",y="PC2")+
+    scale_color_manual(values = palette2 )
+  print(plot)
+
+  }
+dev.off()
+

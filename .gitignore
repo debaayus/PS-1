@@ -1,0 +1,4 @@
+test_data
+__pycache__
+frontend_gui/__pycache__
+backend/__pycache__
