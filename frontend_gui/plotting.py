@@ -212,9 +212,6 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
             elif v['_HEIGHT_'] is '':
                 sg.popup_error('Height field cannot be blank')
                 continue
-            elif v['_TITLE_'] is '':
-                sg.popup_error('Title field cannot be blank')
-                continue
             elif v['_XLABEL_'] is '':
                 sg.popup_error('X-axis label field cannot be blank')
                 continue
@@ -292,12 +289,13 @@ def conc_feature_plot_dash(dm, typemat):
     [sg.Text('Enter the size of the x-tick labels: ', size=(70,1)), sg.Input(default_text='12', key='_XTICKSIZE_', enable_events=True)],
     [sg.Text('Enter the size of the y-ticks labels: ', size=(70,1)), sg.Input(default_text='12', key='_YTICKSIZE_', enable_events=True)], 
     [sg.Text('Enter the size of the marker in the scatter plot', size=(70,1)), sg.Input(default_text='25', key='_MSIZE_', enable_events=True)],
+    [sg.Text('Transparency value of the marker', size=(70,1)), sg.Input(default_text='1', key='_MTRANSP_', enable_events=True)],
     [sg.Text('Fontweight of XY label: ', size=(70,1)), sg.Radio('Bold', "fwxy", default=True, key='_FWXY_'), sg.Radio('Regular', "fwxy", default=False)],
     [sg.Text('Enter the font size of the legend', size=(70,1)), sg.Input(key='_LZ_', enable_events=True, default_text='6')]]
     
     
     note_layout=[[sg.Text('The pdf.fonttype used is type no 42 keeping in line with IEEE standards', size=(55,1))],
-    [sg.Text("For subscript in x-label, y-label or title enter data in the following format 'Concentration of $H_{2}$' to print the same text with H2 having 2 as subscript['Concentration of' is just for demonstration purposes](dollar signs and curly braces must be included. Quote signs not to be included)", size=(85, 5))],
+    [sg.Text("For subscript in x-label, y-label or title enter data in the following format 'Concentration of $H_{2}$' to print the same text with H2 having 2 as subscript['Concentration of' is just for demonstration purposes](dollar signs and curly braces must be included. Quote signs not to be included)", size=(85, 4))],
     [sg.Text("For superscript, enter data in the following format $2^{x}$ for 2 exponent x")],
     [sg.Text('Even though the legend might not be visible on the canvas, it exists and can be viewed by saving the plot', size=(85,2))]]
 
@@ -336,7 +334,7 @@ def conc_feature_plot_dash(dm, typemat):
         type1_data_layout=[
         [sg.Text('Please use the basic plot parameters tab to enter title, xlabels, ylabels, etc. before using the current tab for plotting type I feature-conc plot')],
         [sg.Frame('Data selection', layout=layout2_type1)],
-        [sg.Text('', size=(85,3))],
+        [sg.Text('', size=(85,2))],
         [sg.Text('Multiple X axis columns can be chosen in case of same unit concentration columns. If plotting feature vs feature, please choose one X axis feature column for accurate results', size=(85, 3))],
         [sg.Text('Labels will be created as "index_column name_concentration value"')]]
 
@@ -352,7 +350,7 @@ def conc_feature_plot_dash(dm, typemat):
         y_cols=dm.columns.tolist()
 
         layout1_type2=[[sg.Text('Choose the X-axis concentration column', size=(45,1)), sg.Combo(values=x_cols, default_value=x_cols[0], key='_XAXISTYPE2_', size=(30, 1), readonly=True)],
-        [sg.Text('Choose the sensors for which you want to plot the feature against the concentration Y-axis', size=(45,2)), sg.Listbox(values=y_cols, default_values=[y_cols[0],], select_mode='multiple', key='_FEATURETYPE2_', size=(30, 6))],
+        [sg.Text('Choose the sensors for which you want to plot the feature against the concentration Y-axis', size=(45,2)), sg.Listbox(values=y_cols, default_values=[y_cols[1],], select_mode='multiple', key='_FEATURETYPE2_', size=(30, 6))],
         [sg.Text('Black means selected and white means not selected')]]
     
         type2_data_layout=[
@@ -378,20 +376,17 @@ def conc_feature_plot_dash(dm, typemat):
         if event=='Save Plot':
             if typemat==1:
                 save_plot_dashboard(conc_feature_preview_type1(dm, v['_THEME_'], v['_WIDTH_'], v['_HEIGHT_'], v['_TITLE_'], v['_FW_'], v['_FS_'],  
-                                          v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LZ_'], v['_XTICKSIZE_'], v['_YTICKSIZE_'], v['_MSIZE_'], v['_XAXIS_'], v['_FEATURE_']))
+                                          v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LZ_'], v['_XTICKSIZE_'], v['_YTICKSIZE_'], v['_MSIZE_'], v['_MTRANSP_'], v['_XAXIS_'], v['_FEATURE_']))
             elif typemat==2:
                 save_plot_dashboard(conc_feature_preview_type2(dm, v['_THEME_'], v['_WIDTH_'], v['_HEIGHT_'], v['_TITLE_'], v['_FW_'], v['_FS_'],  
-                                          v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LZ_'], v['_XTICKSIZE_'], v['_YTICKSIZE_'], v['_MSIZE_'], v['_XAXISTYPE2_'], v['_FEATURETYPE2_']))
+                                          v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LZ_'], v['_XTICKSIZE_'], v['_YTICKSIZE_'], v['_MSIZE_'], v['_MTRANSP_'],v['_XAXISTYPE2_'], v['_FEATURETYPE2_']))
 
 
 
 
         if event=='Plot' or event=='Plot Sensor Feature(Y) vs Concentration(X)':
-            if v['_TITLE_'] is '':
-                sg.popup_error('Title field cannot be blank')
-                continue
 
-            elif v['_WIDTH_'] is '':
+            if v['_WIDTH_'] is '':
                 sg.popup_error('Width field cannot be blank')
                 continue
             elif v['_HEIGHT_'] is '':
@@ -421,12 +416,15 @@ def conc_feature_plot_dash(dm, typemat):
             elif v['_MSIZE_'] is '':
                 sg.popup_error('Marker size field cannot be blank')
                 continue
+            elif v['_MTRANSP_'] is '':
+                sg.popup_error('Marker size field cannot be blank')
+                continue
             
         if event=='Plot':
             if figure_agg:
                 delete_figure_agg(figure_agg)
             fig=conc_feature_preview_type1(dm, v['_THEME_'], 10, 6, v['_TITLE_'], v['_FW_'], v['_FS_'],  
-                                          v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LZ_'], v['_XTICKSIZE_'], v['_YTICKSIZE_'], v['_MSIZE_'], v['_XAXIS_'], v['_FEATURE_'])
+                                          v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LZ_'], v['_XTICKSIZE_'], v['_YTICKSIZE_'], v['_MSIZE_'], v['_MTRANSP_'],v['_XAXIS_'], v['_FEATURE_'])
             figure_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
             window['tabgroup'].Widget.select(3)
             
@@ -435,7 +433,7 @@ def conc_feature_plot_dash(dm, typemat):
             if figure_agg:
                 delete_figure_agg(figure_agg)
             fig=conc_feature_preview_type2(dm, v['_THEME_'], 10, 6, v['_TITLE_'], v['_FW_'], v['_FS_'],  
-                                          v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LZ_'], v['_XTICKSIZE_'], v['_YTICKSIZE_'], v['_MSIZE_'], v['_XAXISTYPE2_'], v['_FEATURETYPE2_'])
+                                          v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LZ_'], v['_XTICKSIZE_'], v['_YTICKSIZE_'], v['_MSIZE_'], v['_MTRANSP_'],v['_XAXISTYPE2_'], v['_FEATURETYPE2_'])
             figure_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
             window['tabgroup'].Widget.select(3)
         if event=='Data Matrix Dashboard':
@@ -484,7 +482,7 @@ def conc_feature_plot_dash_type2(dm, sens_start):
 
 """
 
-def conc_feature_preview_type1(dm, theme, width, height, title, title_bold, title_size, xylabelsize, xybold, xlabel, ylabel, legend_size, xticksize, yticksize, msize, concX, featureY):
+def conc_feature_preview_type1(dm, theme, width, height, title, title_bold, title_size, xylabelsize, xybold, xlabel, ylabel, legend_size, xticksize, yticksize, msize, mtransp, concX, featureY):
     fig_size=(float(width), float(height))
 
 
@@ -515,7 +513,7 @@ def conc_feature_preview_type1(dm, theme, width, height, title, title_bold, titl
         index_val=dm.index.values.tolist()
         colname=dm.columns[x_col_no]
         for i in range(0, dm.shape[0]):
-            ax.scatter(dm.iloc[i, x_col_no], dm.iloc[i, y_col_no], alpha=0.6, s=float(msize))
+            ax.scatter(dm.iloc[i, x_col_no], dm.iloc[i, y_col_no], alpha=float(mtransp), s=float(msize))
             label=index_val[i]+"_"+colname+"_"+(val[i])
             labels.append(label)       
     ax.legend(labels=labels, loc='upper left', bbox_to_anchor=(1,1))
@@ -534,7 +532,7 @@ def conc_feature_preview_type1(dm, theme, width, height, title, title_bold, titl
 
 
 
-def conc_feature_preview_type2(dm, theme, width, height, title, title_bold, title_size, xylabelsize, xybold, xlabel, ylabel, legend_size, xticksize, yticksize, msize, concX, sensorsY):
+def conc_feature_preview_type2(dm, theme, width, height, title, title_bold, title_size, xylabelsize, xybold, xlabel, ylabel, legend_size, xticksize, yticksize, msize, mtransp, concX, sensorsY):
     fig_size=(float(width), float(height))
 
 
@@ -559,7 +557,7 @@ def conc_feature_preview_type2(dm, theme, width, height, title, title_bold, titl
 
     
     for val in sensorsY:
-        ax.scatter(dm.loc[:, concX], dm.loc[:,val], label=val, alpha=0.6, s=float(msize))
+        ax.scatter(dm.loc[:, concX], dm.loc[:,val], label=val, alpha=float(mtransp), s=float(msize))
         ax.legend(loc='upper left', bbox_to_anchor=(1,1), prop={'size': int(legend_size)})
         
 

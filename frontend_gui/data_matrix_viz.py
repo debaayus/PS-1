@@ -119,22 +119,24 @@ def options(dm, flag, typemat):
             [sg.Tab('Add column/concentration data', layout=column_add_layout, key='add')], [sg.Tab('Next', layout=next_step_layout, key='next')]], key='tabgroup', enable_events=True)],
             [sg.Text('', size=(80,3))],
             [sg.Text('Press Reset to clear the current data matrix and go back to the feature extraction dashboard'), sg.Button('Reset')]]
+            title='Type I Data matrix dashboard'
         elif typemat==2:
             layout=[[sg.TabGroup([[sg.Tab('Current Data matrix', layout=table_layout, key='table')] ,[sg.Tab('Change of index column', layout=index_change_layout, key='indchange')], 
             [sg.Tab('Add column/concentration data', layout=column_add_layout, key='add')], [sg.Tab('Next', layout=next_step_layout, key='next')]], key='tabgroup', enable_events=True)],
             [sg.Text('', size=(80,3))],
             [sg.Text('Press Reset to clear the current data matrix and go back to the feature extraction dashboard'), sg.Button('Reset')]]
+            title='Type II Data matrix dashboard'
     elif flag==0:
         if typemat==1:
             layout=[[sg.TabGroup([[sg.Tab('Current Data matrix', layout=table_layout, key='table')] ,[sg.Tab('Change of index column', layout=index_change_layout, key='indchange')], 
             [sg.Tab('Add column/concentration data', layout=column_add_layout, key='add')], [sg.Tab('Next', layout=next_step_layout, key='next')]], key='tabgroup', enable_events=True)]]
+            title='Type I Data matrix dashboard'
         elif typemat==2:
             layout=[[sg.TabGroup([[sg.Tab('Current Data matrix', layout=table_layout, key='table')] ,[sg.Tab('Change of index column', layout=index_change_layout, key='indchange')], 
             [sg.Tab('Add column/concentration data', layout=column_add_layout, key='add')], [sg.Tab('Next', layout=next_step_layout, key='next')]], key='tabgroup', enable_events=True)]]
-
-
-       
-    window = sg.Window('Data matrix dashboard', layout=layout, grab_anywhere=False, finalize=True, size=(800,600))
+            title='Type I Data matrix dashboard'
+   
+    window = sg.Window(title, layout=layout, grab_anywhere=False, finalize=True, size=(800,600))
     window['tabgroup'].Widget.select(0)
 
 

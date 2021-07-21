@@ -114,7 +114,7 @@ def show_table(data, header_list, fn, filename):
     [sg.Table(values=data, headings=header_list,
         enable_events=True, key='_TABLE_', 
         auto_size_columns=True,  justification='left',    
-        hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=True, size=(100, 25)
+        hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=True, size=(100, 20)
     )],
     [sg.Text('Enter the row number where the true column headers are located. Type X in the box if the header row(in white background) is the true column header. To find the true column header row number, please use the ROW column(the first column)', size=(70,4)), sg.Input(key='_IN1_', enable_events=True)],
     [sg.Text('Enter the delimiter visible, if any(eg: "|"pipe, ";" semi colon, ","comma, ":"colon). If not visible please leave it blank', size=(70,3)), sg.Input(key='_IN2_', enable_events=True)],
@@ -226,7 +226,7 @@ def show_table_final(df,data_final, header_list_final ,fn):
     [sg.Table(values=data_final, headings=header_list_final,
         enable_events=False, key='_TABLE_', 
         auto_size_columns=True,  justification='left',    
-        hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=False, size=(100, 25)
+        hide_vertical_scroll=False, vertical_scroll_only=False, display_row_numbers=False, size=(100, 20)
     )]]
     param=[[sg.Text('Select YES if index column(first column with values 1, 2 ,3) is visible. Select NO to allow the program to create an index column', size=(70,2)), 
     sg.Radio('Yes', "yesorno", default=True, key='_RAD_'),
