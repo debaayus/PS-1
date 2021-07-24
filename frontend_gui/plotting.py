@@ -2,6 +2,8 @@ import PySimpleGUI as sg
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.figure
+import itertools
+from itertools import permutations
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.ticker import MultipleLocator,FormatStrFormatter,MaxNLocator
 from frontend_gui.plotting_utils import draw_figure, draw_figure_w_toolbar, Toolbar, delete_figure_agg
@@ -44,17 +46,17 @@ def response(df, t_col_no, dat_col):
 This function plots the response curve using parameters from a dashboard function. Lots of parameters are left upto the user.
 """
 def preview_plot(df, theme, width, height, lw, title, title_bold, title_size, xylabelsize, xybold, 
-    xlabel, ylabel, legend, legend_size, xticksize, yticksize, max_x_ticks, max_y_ticks, 
-    xmargin, ymargin, x_col, y_col, start, end):
+    xlabel, ylabel, legend, legend_size, xticksize, yticksize, max_x_ticks, max_y_ticks, x_col, y_col, start, end):
     
-    fig_size=(float(width), float(height))
+    
    
-
+    plt.style.use('default')
     """Figure creation using matplotlib"""
     mpl.rcParams['pdf.fonttype'] = 42
     mpl.rcParams['ps.fonttype'] = 42
     mpl.rcParams['font.family'] = 'Arial'
-
+    plt.style.use(theme)
+    fig_size=(float(width), float(height))
     
     if title_bold is True:
         title_bold='bold'
@@ -65,9 +67,7 @@ def preview_plot(df, theme, width, height, lw, title, title_bold, title_size, xy
         xybold='bold'
     else:
         xybold='regular'
-
     fig = plt.figure(figsize=fig_size)
-    plt.style.use(theme)
     ax = fig.add_subplot(111)
 
     if start is not False and end is not False:
@@ -78,10 +78,11 @@ def preview_plot(df, theme, width, height, lw, title, title_bold, title_size, xy
         for col in y_col:
             ax.plot(x_col, df.loc[:,col], linewidth=float(lw))
         ax.set_xlim(0, max(x_col))
+        ax.set_ylim(0)
     ax.xaxis.set_major_locator(plt.MaxNLocator(int(max_x_ticks)))
     ax.yaxis.set_major_locator(plt.MaxNLocator(int(max_y_ticks)))
-    ax.margins(x=float(xmargin))
-    ax.margins(y=float(ymargin))
+    ax.margins(x=0)
+    ax.margins(y=0.05)
     ax.set_title(title , fontsize=int(title_size), fontweight=title_bold)
     ax.set_xlabel(xlabel, fontsize=int(xylabelsize), fontweight =xybold)
     ax.set_ylabel(ylabel, fontsize=int(xylabelsize), fontweight=xybold)
@@ -99,27 +100,19 @@ Extremely useful plotting dashboard. Extreme control with the user. Default valu
 The preview function allows the user to keep plotting till satisfied. The structure of this code is highly reusable for further functions.
 """
 def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create plot with specific columns
+    themes=['Solarize_Light2', '_classic_test_patch', 'bmh', 'dark_background', 'fast', 'fivethirtyeight', 'gadfly', 'ggplot', 'grayscale', 'seaborn', 'seaborn-bright', 'seaborn-colorblind', 'seaborn-dark', 'seaborn-dark-palette', 'seaborn-darkgrid', 'seaborn-deep', 'seaborn-muted', 'seaborn-notebook', 'seaborn-paper', 'seaborn-pastel', 'seaborn-poster', 'seaborn-talk', 'seaborn-ticks', 'seaborn-white', 'seaborn-whitegrid', 'tableau-colorblind10']
     layout1=[
-    [sg.Text('Choose the theme of the plot', size=(70,1)), sg.Combo(values=plt.style.available, key='_THEME_', default_value='_classic_test_patch', readonly=True, size=(30,10))],
-    [sg.Text('Enter the title of the plot', size=(70,1)), sg.Input(default_text='Response Curve', key='_TITLE_', enable_events=True)],
-    [sg.Text('Font size of the title', size=(70,1)), sg.Input(key='_FS_', default_text='12', enable_events=True)], 
-    [sg.Text('Fontweight of title: ', size=(70,1)), sg.Radio('Bold', "fw", default=True, key='_FW_'), sg.Radio('Regular', "fw", default=False)],
-    [sg.Text('Enter the width of the plot (in inches)', size=(70,1)), sg.Input(default_text='10', key='_WIDTH_', enable_events=True)],
-    [sg.Text('Enter the height of the plot (in inches)', size=(70,1)), sg.Input(default_text='6', key='_HEIGHT_', enable_events=True)],
-    [sg.Text('Enter the line width for the plot', size=(70,1)), sg.Input(default_text='0.8', key='_LW_', enable_events=True)],
-    [sg.Text('Enter the x-axis label of the plot', size=(70,1)), sg.Input(default_text='Scan', key='_XLABEL_', enable_events=True)],
-    [sg.Text('Enter the y-axis label of the plot', size=(70,1)), sg.Input(default_text='Resistance',key='_YLABEL_', enable_events=True)],
-    [sg.Text('Font size of the XY labels', size=(70,1)), sg.Input(key='_FSXY_', default_text='12', enable_events=True)], 
-    [sg.Text('Fontweight of XY label: ', size=(70,1)), sg.Radio('Bold', "fwxy", default=True, key='_FWXY_'), sg.Radio('Regular', "fwxy", default=False)],
-    [sg.Text('Enter the size of the x-tick labels: ', size=(70,1)), sg.Input(default_text='12', key='_XTICKSIZE_', enable_events=True)],
-    [sg.Text('Enter the size of the y-ticks labels: ', size=(70,1)), sg.Input(default_text='12', key='_YTICKSIZE_', enable_events=True)],
-    [sg.Text('Enter the desired number of ticks in the x-axis', size=(70,1)), sg.Input(default_text='3', key='_XTICKS_', enable_events=True)],
-    [sg.Text('Enter the desired number of ticks in the y-axis', size=(70,1)), sg.Input(default_text='3', key='_YTICKS_', enable_events=True)],
-    [sg.Text('Enter the % margin to be padded in the X-axis of the plot(float values from 0 to 1)', size=(70,1)), sg.Input(default_text='0', key='_XMARGIN_', enable_events=True)],
-    [sg.Text('Enter the % margin to be padded in the Y-axis of the plot(float values from 0 to 1)', size=(70,1)), sg.Input(default_text='0.05', key='_YMARGIN_', enable_events=True)],
+    [sg.Text('Choose the theme of the plot', size=(70,1)), sg.Combo(values=themes, key='_THEME_', default_value='_classic_test_patch', readonly=True, size=(30,10))],
+    [sg.Text('Enter the width of the plot (in inches)', size=(70,1)), sg.Slider(range=(2, 30), default_value=10, resolution=1, orientation='h', size=(20,15), key='_WIDTH_')],
+    [sg.Text('Enter the height of the plot (in inches)', size=(70,1)), sg.Slider(range=(2, 30), default_value=6, resolution=1, orientation='h', size=(20,15), key='_HEIGHT_')],
+    [sg.Text('Enter the line width for the plot', size=(70,1)), sg.Slider(range=(0.1, 3.0), default_value=0.8, resolution=0.1, orientation='h', size=(20,15), key='_LW_')],
+    [sg.Text('Enter the size of the x-tick labels: ', size=(70,1)), sg.Slider(range=(2, 30), default_value=12, resolution=1, orientation='h', size=(20,15), key='_XTICKSIZE_')],
+    [sg.Text('Enter the size of the y-ticks labels: ', size=(70,1)), sg.Slider(range=(2, 30), default_value=12, resolution=1, orientation='h', size=(20,15), key='_YTICKSIZE_')],
+    [sg.Text('Enter the desired number of ticks in the x-axis', size=(70,1)), sg.Slider(range=(1, 20), default_value=4, resolution=1, orientation='h', size=(20,15), key='_XTICKS_')],
+    [sg.Text('Enter the desired number of ticks in the y-axis', size=(70,1)), sg.Slider(range=(1, 20), default_value=4, resolution=1, orientation='h', size=(20,15), key='_YTICKS_')],
     [sg.Text('Do you require a legend in the plot?', size=(70,1)), sg.Radio('Yes', "legend", default=True, key='_LEGEND_'), sg.Radio('No', "legend", default=False)],
-    [sg.Text('Enter the font size of the legend', size=(70,1)), sg.Input(key='_LZ_', enable_events=True, default_text='6')],
-    [sg.Text('The pdf.fonttype used is type no 42 keeping in line with IEEE standards', size=(55,1))],
+    [sg.Text('Enter the font size of the legend', size=(70,1)), sg.Slider(range=(1, 25), default_value=6, resolution=1, orientation='h', size=(20,15), key='_LZ_')],
+    [sg.Text('The pdf.fonttype used is type no 42 keeping in line with IEEE standards', size=(60,1))],
     [sg.Text('Even though the legend might not be visible on the canvas, it exists and can be viewed by saving the plot', size=(85,2))]]
     
     #this block is to determine the x-axis and still leave functionality to the user without a fuss. 
@@ -154,7 +147,16 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
 
     layout_main=[
     [sg.Frame('Plot Parameters', layout=layout1)]]
-    layout_data=[[sg.Frame('X-axis columns', layout=layout2), sg.Frame('Y-axis columns', layout=layout3)],
+    
+    layout_data=[
+    [sg.Text('Enter the title of the plot', size=(70,1)), sg.Input(default_text='Response Curve', key='_TITLE_')],
+    [sg.Text('Font size of the title', size=(70,1)), sg.Slider(range=(2, 30), default_value=12, resolution=1, orientation='h', key='_FS_', size=(20,15))], 
+    [sg.Text('Fontweight of title: ', size=(70,1)), sg.Radio('Bold', "fw", default=True, key='_FW_'), sg.Radio('Regular', "fw", default=False)],
+    [sg.Text('Enter the x-axis label of the plot', size=(70,1)), sg.Input(default_text='Scan', key='_XLABEL_')],
+    [sg.Text('Enter the y-axis label of the plot', size=(70,1)), sg.Input(default_text='Resistance',key='_YLABEL_')],
+    [sg.Text('Font size of the XY labels', size=(70,1)), sg.Slider(range=(2, 30), default_value=12, resolution=1, orientation='h', size=(20,15), key='_FSXY_')], 
+    [sg.Text('Fontweight of XY label: ', size=(70,1)), sg.Radio('Bold', "fwxy", default=True, key='_FWXY_'), sg.Radio('Regular', "fwxy", default=False)],
+    [sg.Frame('X-axis columns', layout=layout2), sg.Frame('Y-axis columns', layout=layout3)],
     [sg.Button('Preview plot')]]
     
     layout_zoom=[[sg.Frame('Optional row indexing to examine behaviour of a signal closely', layout=layout4)],
@@ -191,12 +193,12 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
             if fl==1:
                 save_plot_dashboard(preview_plot(df, v['_THEME_'], v['_WIDTH_'], v['_HEIGHT_'], v['_LW_'], v['_TITLE_'], v['_FW_'], v['_FS_'],  
                                                     v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LEGEND_'], v['_LZ_'], v['_XTICKSIZE_'],  v['_YTICKSIZE_'], 
-                                                    v['_XTICKS_'], v['_YTICKS_'], v['_XMARGIN_'], v['_YMARGIN_'], t_col, v['_DATA_'], False, False))
+                                                    v['_XTICKS_'], v['_YTICKS_'], t_col, v['_DATA_'], False, False))
                 
             elif fl==2:
                 save_plot_dashboard(preview_plot(df, v['_THEME_'], v['_WIDTH_'], v['_HEIGHT_'], v['_LW_'], v['_TITLE_'], v['_FW_'], v['_FS_'],  
                                                     v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LEGEND_'], v['_LZ_'], v['_XTICKSIZE_'],  v['_YTICKSIZE_'], 
-                                                    v['_XTICKS_'], v['_YTICKS_'], v['_XMARGIN_'], v['_YMARGIN_'], t_col, v['_DATA_'], int(v['_SINDEX_']), int(v['_EINDEX_'])))
+                                                    v['_XTICKS_'], v['_YTICKS_'], t_col, v['_DATA_'], int(v['_SINDEX_']), int(v['_EINDEX_'])))
                 
             elif fl==0:
                 save_plot_dashboard(response(df, t_col_no, dat_col))
@@ -248,7 +250,7 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
                 t_col=df.iloc[:,(int(t_col_no)-1)]
             fig=preview_plot(df, v['_THEME_'], 10, 6, v['_LW_'], v['_TITLE_'], v['_FW_'], v['_FS_'],  
                             v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LEGEND_'], v['_LZ_'], v['_XTICKSIZE_'],  v['_YTICKSIZE_'], 
-                            v['_XTICKS_'], v['_YTICKS_'], v['_XMARGIN_'], v['_YMARGIN_'], t_col, v['_DATA_'], False, False)
+                            v['_XTICKS_'], v['_YTICKS_'], t_col, v['_DATA_'], False, False)
             figure_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
             fl=1
             window['tabgroup'].Widget.select(2)
@@ -265,7 +267,7 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
                 continue
             fig=preview_plot(df, v['_THEME_'], 10, 6, v['_LW_'], v['_TITLE_'], v['_FW_'], v['_FS_'],  
                             v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LEGEND_'], v['_LZ_'], v['_XTICKSIZE_'],  v['_YTICKSIZE_'], 
-                            v['_XTICKS_'], v['_YTICKS_'], v['_XMARGIN_'], v['_YMARGIN_'], t_col, v['_DATA_'], int(v['_SINDEX_']), int(v['_EINDEX_']))
+                            v['_XTICKS_'], v['_YTICKS_'], t_col, v['_DATA_'], int(v['_SINDEX_']), int(v['_EINDEX_']))
             figure_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
             fl=2
             window['tabgroup'].Widget.select(2)
@@ -275,26 +277,22 @@ def customized_plotting_dashboard(df, t_col_no, dat_col): ##function to create p
     return
 
 def conc_feature_plot_dash(dm, typemat):
-
+    themes=['Solarize_Light2', '_classic_test_patch', 'bmh', 'dark_background', 'fast', 'fivethirtyeight', 'gadfly','ggplot', 'grayscale', 'seaborn', 'seaborn-bright', 'seaborn-colorblind', 'seaborn-dark', 'seaborn-dark-palette', 'seaborn-darkgrid', 'seaborn-deep', 'seaborn-muted', 'seaborn-notebook', 'seaborn-paper', 'seaborn-pastel', 'seaborn-poster', 'seaborn-talk', 'seaborn-ticks', 'seaborn-white', 'seaborn-whitegrid', 'tableau-colorblind10']
     plot_basic_param_layout=[
-    [sg.Text('Choose the theme of the plot', size=(70,1)), sg.Combo(values=plt.style.available, key='_THEME_', default_value='_classic_test_patch', readonly=True, size=(30,10))],
-    [sg.Text('Enter the title of the plot', size=(70,1)), sg.Input(default_text='Concentration Feature Plot', key='_TITLE_', enable_events=True)],
-    [sg.Text('Font size of the title', size=(70,1)), sg.Input(key='_FS_', default_text='12', enable_events=True)], 
-    [sg.Text('Fontweight of title: ', size=(70,1)), sg.Radio('Bold', "fw", default=True, key='_FW_'), sg.Radio('Regular', "fw", default=False)],
-    [sg.Text('Enter the width of the plot (in inches)', size=(70,1)), sg.Input(default_text='10', key='_WIDTH_', enable_events=True)],
-    [sg.Text('Enter the height of the plot (in inches)', size=(70,1)), sg.Input(default_text='6', key='_HEIGHT_', enable_events=True)],
-    [sg.Text('Enter the x-axis label of the plot', size=(70,1)), sg.Input(default_text='Concentration', key='_XLABEL_', enable_events=True)],
-    [sg.Text('Enter the y-axis label of the plot', size=(70,1)), sg.Input(default_text='Feature',key='_YLABEL_', enable_events=True)],
-    [sg.Text('Font size of the XY labels', size=(70,1)), sg.Input(key='_FSXY_', default_text='12', enable_events=True)],
-    [sg.Text('Enter the size of the x-tick labels: ', size=(70,1)), sg.Input(default_text='12', key='_XTICKSIZE_', enable_events=True)],
-    [sg.Text('Enter the size of the y-ticks labels: ', size=(70,1)), sg.Input(default_text='12', key='_YTICKSIZE_', enable_events=True)], 
-    [sg.Text('Enter the size of the marker in the scatter plot', size=(70,1)), sg.Input(default_text='25', key='_MSIZE_', enable_events=True)],
-    [sg.Text('Transparency value of the marker', size=(70,1)), sg.Input(default_text='1', key='_MTRANSP_', enable_events=True)],
-    [sg.Text('Fontweight of XY label: ', size=(70,1)), sg.Radio('Bold', "fwxy", default=True, key='_FWXY_'), sg.Radio('Regular', "fwxy", default=False)],
-    [sg.Text('Enter the font size of the legend', size=(70,1)), sg.Input(key='_LZ_', enable_events=True, default_text='6')]]
+    [sg.Text('Choose the theme of the plot', size=(70,1)), sg.Combo(values=themes, key='_THEME_', default_value='_classic_test_patch', readonly=True, size=(30,10))],
+    [sg.Text('Enter the width of the plot (in inches)', size=(70,1)), sg.Slider(range=(2, 30), default_value=10, resolution=1, orientation='h', size=(20,15), key='_WIDTH_')],
+    [sg.Text('Enter the height of the plot (in inches)', size=(70,1)), sg.Slider(range=(2, 30), default_value=6, resolution=1, orientation='h', size=(20,15), key='_HEIGHT_')],
+    [sg.Text('Enter the line width for the plot', size=(70,1)), sg.Slider(range=(0.1, 3.0), default_value=0.8, resolution=0.1, orientation='h', size=(20,15), key='_LW_')],
+    [sg.Text('Enter the size of the x-tick labels: ', size=(70,1)), sg.Slider(range=(2, 30), default_value=12, resolution=1, orientation='h', size=(20,15), key='_XTICKSIZE_')],
+    [sg.Text('Enter the size of the y-ticks labels: ', size=(70,1)), sg.Slider(range=(2, 30), default_value=12, resolution=1, orientation='h', size=(20,15), key='_YTICKSIZE_')],
+    [sg.Text('Enter the desired number of ticks in the x-axis', size=(70,1)), sg.Slider(range=(1, 20), default_value=4, resolution=1, orientation='h', size=(20,15), key='_XTICKS_')],
+    [sg.Text('Enter the desired number of ticks in the y-axis', size=(70,1)), sg.Slider(range=(1, 20), default_value=4, resolution=1, orientation='h', size=(20,15), key='_YTICKS_')], 
+    [sg.Text('Enter the size of the marker in the scatter plot', size=(70,1)), sg.Slider(range=(5, 200), default_value=25, resolution=5, orientation='h', size=(20,15), key='_MSIZE_')],
+    [sg.Text('Transparency value of the marker', size=(70,1)), sg.Slider(range=(0.0,1.0), default_value=1.0, resolution=0.1, orientation='h', size=(20,15), key='_MTRANSP_')],
+    [sg.Text('Enter the font size of the legend', size=(70,1)), sg.Slider(range=(1, 25), default_value=6, resolution=1, orientation='h', size=(20,15), key='_LZ_')]]
     
     
-    note_layout=[[sg.Text('The pdf.fonttype used is type no 42 keeping in line with IEEE standards', size=(55,1))],
+    note_layout=[[sg.Text('The pdf.fonttype used is type no 42 keeping in line with IEEE standards', size=(60,1))],
     [sg.Text("For subscript in x-label, y-label or title enter data in the following format 'Concentration of $H_{2}$' to print the same text with H2 having 2 as subscript['Concentration of' is just for demonstration purposes](dollar signs and curly braces must be included. Quote signs not to be included)", size=(85, 4))],
     [sg.Text("For superscript, enter data in the following format $2^{x}$ for 2 exponent x")],
     [sg.Text('Even though the legend might not be visible on the canvas, it exists and can be viewed by saving the plot', size=(85,2))]]
@@ -323,8 +321,15 @@ def conc_feature_plot_dash(dm, typemat):
         y_cols=[]
         y_cols=dm.columns.tolist()
         layout2_type1=[
-        [sg.Text('Choose the X-axis column', size=(45,1)), sg.Listbox(values=x_cols, default_values=[x_cols[0],], key='_XAXIS_', size=(30, 6), select_mode='multiple')],
-        [sg.Text('Choose the Y-axis feature column', size=(45,1)), sg.Combo(values=y_cols, default_value=y_cols[1], key='_FEATURE_', size=(30, 6), readonly=True)],
+        [sg.Text('Enter the title of the plot', size=(70,1)), sg.Input(default_text='Feature Plot', key='_TITLE_')],
+        [sg.Text('Font size of the title', size=(70,1)), sg.Slider(range=(2, 30), default_value=12, resolution=1, orientation='h', key='_FS_', size=(20,15))], 
+        [sg.Text('Fontweight of title: ', size=(70,1)), sg.Radio('Bold', "fw", default=True, key='_FW_'), sg.Radio('Regular', "fw", default=False)],
+        [sg.Text('Enter the x-axis label of the plot', size=(70,1)), sg.Input(default_text='Concentration', key='_XLABEL_')],
+        [sg.Text('Enter the y-axis label of the plot', size=(70,1)), sg.Input(default_text='Feature',key='_YLABEL_')],
+        [sg.Text('Font size of the XY labels', size=(70,1)), sg.Slider(range=(2, 30), default_value=12, resolution=1, orientation='h', size=(20,15), key='_FSXY_')], 
+        [sg.Text('Fontweight of XY label: ', size=(70,1)), sg.Radio('Bold', "fwxy", default=True, key='_FWXY_'), sg.Radio('Regular', "fwxy", default=False)],
+        [sg.Text('Choose the X-axis column(s)', size=(45,1)), sg.Listbox(values=x_cols, default_values=[x_cols[0],], key='_XAXIS_', size=(30, 6), select_mode='multiple')],
+        [sg.Text('Choose the Y-axis column(s)', size=(45,1)), sg.Listbox(values=y_cols, default_values=[y_cols[1],], key='_FEATURE_', size=(30, 6), select_mode='multiple')],
         [sg.Text('Black means selected and white means not selected in the listbox')],
         [sg.Button('Plot')]]
         
@@ -332,10 +337,9 @@ def conc_feature_plot_dash(dm, typemat):
         #[sg.Input(key='_LBL_', default_text='')]]
 
         type1_data_layout=[
-        [sg.Text('Please use the basic plot parameters tab to enter title, xlabels, ylabels, etc. before using the current tab for plotting type I feature-conc plot')],
         [sg.Frame('Data selection', layout=layout2_type1)],
         [sg.Text('', size=(85,2))],
-        [sg.Text('Multiple X axis columns can be chosen in case of same unit concentration columns. If plotting feature vs feature, please choose one X axis feature column for accurate results', size=(85, 3))],
+        [sg.Text('Multiple X axis columns can be chosen in case of same unit concentration columns. If plotting feature vs feature, please be careful about the units for accurate results', size=(85, 3))],
         [sg.Text('Labels will be created as "index_column name_concentration value"')]]
 
         layout=[[sg.TabGroup([[sg.Tab('Current Data matrix', layout=table_layout, key='table')], [sg.Tab('Basic Plot Parameters', layout=plot_basic_param_layout, key='plotparam')], [sg.Tab('Type I plot parameters', layout=type1_data_layout, key='type1')], [sg.Tab('Plot preview', layout=layout_plot, key='plot')] ], key='tabgroup', enable_events=True)],
@@ -349,12 +353,18 @@ def conc_feature_plot_dash(dm, typemat):
         y_cols=[]
         y_cols=dm.columns.tolist()
 
-        layout1_type2=[[sg.Text('Choose the X-axis concentration column', size=(45,1)), sg.Combo(values=x_cols, default_value=x_cols[0], key='_XAXISTYPE2_', size=(30, 1), readonly=True)],
-        [sg.Text('Choose the sensors for which you want to plot the feature against the concentration Y-axis', size=(45,2)), sg.Listbox(values=y_cols, default_values=[y_cols[1],], select_mode='multiple', key='_FEATURETYPE2_', size=(30, 6))],
+        layout1_type2=[[sg.Text('Choose the X-axis column(s)', size=(45,1)), sg.Combo(values=x_cols, default_values=[x_cols[0],], key='_XAXISTYPE2_', size=(30, 6), select_mode='multiple')],
+        [sg.Text('Choose the Y-axis column(s)', size=(45,1)), sg.Listbox(values=y_cols, default_valuess=[y_cols[1],], select_mode='multiple', key='_FEATURETYPE2_', size=(30, 6))],
         [sg.Text('Black means selected and white means not selected')]]
     
         type2_data_layout=[
-        [sg.Text('Please use the basic plot parameters tab to enter title, xlabels, ylabels, etc. before using the current tab for plotting type II feature-conc plot')],
+        [sg.Text('Enter the title of the plot', size=(70,1)), sg.Input(default_text='Feature Plot', key='_TITLE_')],
+        [sg.Text('Font size of the title', size=(70,1)), sg.Slider(range=(2, 30), default_value=12, resolution=1, orientation='h', key='_FS_', size=(20,15))], 
+        [sg.Text('Fontweight of title: ', size=(70,1)), sg.Radio('Bold', "fw", default=True, key='_FW_'), sg.Radio('Regular', "fw", default=False)],
+        [sg.Text('Enter the x-axis label of the plot', size=(70,1)), sg.Input(default_text='Concentration', key='_XLABEL_')],
+        [sg.Text('Enter the y-axis label of the plot', size=(70,1)), sg.Input(default_text='Feature',key='_YLABEL_')],
+        [sg.Text('Font size of the XY labels', size=(70,1)), sg.Slider(range=(2, 30), default_value=12, resolution=1, orientation='h', size=(20,15), key='_FSXY_')], 
+        [sg.Text('Fontweight of XY label: ', size=(70,1)), sg.Radio('Bold', "fwxy", default=True, key='_FWXY_'), sg.Radio('Regular', "fwxy", default=False)],
         [sg.Frame('X-axis: Concentration and Y-axis: Sensor feature', layout=layout1_type2)],
         [sg.Text('Labels will be created by sensor names')],
         [sg.Button('Plot Sensor Feature(Y) vs Concentration(X)')]]
@@ -376,10 +386,10 @@ def conc_feature_plot_dash(dm, typemat):
         if event=='Save Plot':
             if typemat==1:
                 save_plot_dashboard(conc_feature_preview_type1(dm, v['_THEME_'], v['_WIDTH_'], v['_HEIGHT_'], v['_TITLE_'], v['_FW_'], v['_FS_'],  
-                                          v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LZ_'], v['_XTICKSIZE_'], v['_YTICKSIZE_'], v['_MSIZE_'], v['_MTRANSP_'], v['_XAXIS_'], v['_FEATURE_']))
+                                          v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LZ_'], v['_XTICKS_'], v['_YTICKS_'], v['_XTICKSIZE_'], v['_YTICKSIZE_'], v['_MSIZE_'], v['_MTRANSP_'], v['_XAXIS_'], v['_FEATURE_']))
             elif typemat==2:
                 save_plot_dashboard(conc_feature_preview_type2(dm, v['_THEME_'], v['_WIDTH_'], v['_HEIGHT_'], v['_TITLE_'], v['_FW_'], v['_FS_'],  
-                                          v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LZ_'], v['_XTICKSIZE_'], v['_YTICKSIZE_'], v['_MSIZE_'], v['_MTRANSP_'],v['_XAXISTYPE2_'], v['_FEATURETYPE2_']))
+                                          v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LZ_'], v['_XTICKS_'], v['_YTICKS_'], v['_XTICKSIZE_'], v['_YTICKSIZE_'], v['_MSIZE_'], v['_MTRANSP_'],v['_XAXISTYPE2_'], v['_FEATURETYPE2_']))
 
 
 
@@ -424,7 +434,7 @@ def conc_feature_plot_dash(dm, typemat):
             if figure_agg:
                 delete_figure_agg(figure_agg)
             fig=conc_feature_preview_type1(dm, v['_THEME_'], 10, 6, v['_TITLE_'], v['_FW_'], v['_FS_'],  
-                                          v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LZ_'], v['_XTICKSIZE_'], v['_YTICKSIZE_'], v['_MSIZE_'], v['_MTRANSP_'],v['_XAXIS_'], v['_FEATURE_'])
+                                          v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LZ_'], v['_XTICKS_'], v['_YTICKS_'], v['_XTICKSIZE_'], v['_YTICKSIZE_'], v['_MSIZE_'], v['_MTRANSP_'],v['_XAXIS_'], v['_FEATURE_'])
             figure_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
             window['tabgroup'].Widget.select(3)
             
@@ -433,7 +443,7 @@ def conc_feature_plot_dash(dm, typemat):
             if figure_agg:
                 delete_figure_agg(figure_agg)
             fig=conc_feature_preview_type2(dm, v['_THEME_'], 10, 6, v['_TITLE_'], v['_FW_'], v['_FS_'],  
-                                          v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LZ_'], v['_XTICKSIZE_'], v['_YTICKSIZE_'], v['_MSIZE_'], v['_MTRANSP_'],v['_XAXISTYPE2_'], v['_FEATURETYPE2_'])
+                                          v['_FSXY_'], v['_FWXY_'], v['_XLABEL_'], v['_YLABEL_'], v['_LZ_'], v['_XTICKS_'], v['_YTICKS_'], v['_XTICKSIZE_'], v['_YTICKSIZE_'], v['_MSIZE_'], v['_MTRANSP_'],v['_XAXISTYPE2_'], v['_FEATURETYPE2_'])
             figure_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
             window['tabgroup'].Widget.select(3)
         if event=='Data Matrix Dashboard':
@@ -482,17 +492,17 @@ def conc_feature_plot_dash_type2(dm, sens_start):
 
 """
 
-def conc_feature_preview_type1(dm, theme, width, height, title, title_bold, title_size, xylabelsize, xybold, xlabel, ylabel, legend_size, xticksize, yticksize, msize, mtransp, concX, featureY):
-    fig_size=(float(width), float(height))
+def conc_feature_preview_type1(dm, theme, width, height, title, title_bold, title_size, xylabelsize, xybold, xlabel, ylabel, legend_size, max_xticks, max_yticks, xticksize, yticksize, msize, mtransp, concX, featureY):
 
-
+    plt.style.use('default')
     """Figure creation using matplotlib"""
     mpl.rcParams['pdf.fonttype'] = 42
     mpl.rcParams['ps.fonttype'] = 42
     mpl.rcParams['font.family'] = 'Arial'
-
-    fig = plt.figure(figsize=fig_size)
+    
     plt.style.use(theme)
+    fig_size=(float(width), float(height))
+    fig = plt.figure(figsize=fig_size)
     ax = fig.add_subplot(111)
 
     
@@ -505,17 +515,36 @@ def conc_feature_preview_type1(dm, theme, width, height, title, title_bold, titl
         xybold='bold'
     else:
         xybold='regular'
+    
+    if len(concX)>=len(featureY):
+        list2=featureY
+        list1=concX
+    else:
+        list2=concX
+        list1=featureY
+    unique_combinations = []
+ 
+    unique_combinations = [list(zip(each_permutation, list2)) for each_permutation in itertools.permutations(list1, len(list2))]
 
+
+    # zip() is called to pair each permutation
+    # and shorter list element into combination
+    
     labels=[]
-    y_col_no=dm.columns.get_loc(featureY)
-    for val in concX:
-        x_col_no= dm.columns.get_loc(val)
-        index_val=dm.index.values.tolist()
-        colname=dm.columns[x_col_no]
-        for i in range(0, dm.shape[0]):
-            ax.scatter(dm.iloc[i, x_col_no], dm.iloc[i, y_col_no], alpha=float(mtransp), s=float(msize))
-            label=index_val[i]+"_"+colname+"_"+(val[i])
-            labels.append(label)       
+    for valz in unique_combinations:
+        if len(concX)<len(featureY):
+            [tup[::-1] for tup in valz]
+        for (val, val2) in valz:
+            y_col_no=dm.columns.get_loc(val2)
+            x_col_no= dm.columns.get_loc(val)
+            index_val=dm.index.values.tolist()
+            colname=dm.columns[x_col_no]
+            colname2=dm.columns[y_col_no]
+            for i in range(0, dm.shape[0]):
+                ax.scatter(dm.iloc[i, x_col_no], dm.iloc[i, y_col_no], alpha=float(mtransp), s=float(msize))
+                label=index_val[i]+"_"+colname+"_"+colname2
+                print(label)
+                labels.append(label)       
     ax.legend(labels=labels, loc='upper left', bbox_to_anchor=(1,1))
 
 
@@ -525,22 +554,26 @@ def conc_feature_preview_type1(dm, theme, width, height, title, title_bold, titl
     ax.set_title(title , fontsize=int(title_size), fontweight=title_bold)
     ax.set_xlabel(xlabel, fontsize=int(xylabelsize), fontweight =xybold)
     ax.set_ylabel(ylabel, fontsize=int(xylabelsize), fontweight=xybold)
+    ax.xaxis.set_major_locator(plt.MaxNLocator(int(max_xticks)))
+    ax.yaxis.set_major_locator(plt.MaxNLocator(int(max_yticks)))
     ax.tick_params(axis='x', labelsize=int(xticksize))
     ax.tick_params(axis='y', labelsize=int(yticksize))
+
 
     return fig
 
 
 
-def conc_feature_preview_type2(dm, theme, width, height, title, title_bold, title_size, xylabelsize, xybold, xlabel, ylabel, legend_size, xticksize, yticksize, msize, mtransp, concX, sensorsY):
-    fig_size=(float(width), float(height))
-
-
+def conc_feature_preview_type2(dm, theme, width, height, title, title_bold, title_size, xylabelsize, xybold, xlabel, ylabel, legend_size, max_xticks, max_yticks, xticksize, yticksize, msize, mtransp, concX, sensorsY):
+    
+    
+    plt.style.use('default')
     """Figure creation using matplotlib"""
     mpl.rcParams['pdf.fonttype'] = 42
     mpl.rcParams['ps.fonttype'] = 42
     mpl.rcParams['font.family'] = 'Arial'
-
+    plt.style.use(theme)
+    fig_size=(float(width), float(height))
     if title_bold is True:
         title_bold='bold'
     else:
@@ -550,25 +583,47 @@ def conc_feature_preview_type2(dm, theme, width, height, title, title_bold, titl
         xybold='bold'
     else:
         xybold='regular'
-
+    
     fig = plt.figure(figsize=fig_size)
-    plt.style.use(theme)
+    
     ax = fig.add_subplot(111)
+    if len(concX)>=len(sensorsY):
+        list2=sensorsY
+        list1=concX
+    else:
+        list2=concX
+        list1=sensorsY
+    unique_combinations = []
+ 
+    unique_combinations = [list(zip(each_permutation, list2)) for each_permutation in itertools.permutations(list1, len(list2))]
+    
+    labels=[]
+    
+    for valz in unique_combinations:
+        if len(concX)<len(sensorsY):
+            [tup[::-1] for tup in valz]
+        for (val, val2) in valz:
+            y_col_no=dm.columns.get_loc(val2)
+            x_col_no= dm.columns.get_loc(val)
+            index_val=dm.index.values.tolist()
+            colname=dm.columns[x_col_no]
+            colname2=dm.columns[y_col_no]
+            for i in range(0, dm.shape[0]):
+                ax.scatter(dm.iloc[i, x_col_no], dm.iloc[i, y_col_no], alpha=float(mtransp), s=float(msize))
+                label=index_val[i]+"_"+colname+"_"+colname2
+                print(label)
+                labels.append(label)       
+    ax.legend(labels=labels, loc='upper left', bbox_to_anchor=(1,1))
 
     
-    for val in sensorsY:
-        ax.scatter(dm.loc[:, concX], dm.loc[:,val], label=val, alpha=float(mtransp), s=float(msize))
-        ax.legend(loc='upper left', bbox_to_anchor=(1,1), prop={'size': int(legend_size)})
-        
-
-    
-
-
     ax.set_title(title , fontsize=int(title_size), fontweight=title_bold)
     ax.set_xlabel(xlabel, fontsize=int(xylabelsize), fontweight =xybold)
     ax.set_ylabel(ylabel, fontsize=int(xylabelsize), fontweight=xybold)
+    ax.xaxis.set_major_locator(plt.MaxNLocator(int(max_xticks)))
+    ax.yaxis.set_major_locator(plt.MaxNLocator(int(max_yticks)))
     ax.tick_params(axis='x', labelsize=int(xticksize))
     ax.tick_params(axis='y', labelsize=int(yticksize))
+
 
 
 

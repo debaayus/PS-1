@@ -362,7 +362,7 @@ def data_matrix_landing(df, dat_col, header_list, data, ty, dm):
                 ## Create and show data matrix using above method
                 ## If user is satisfied return the created data matrix to final.py
                 ## If user wants to change matrix, call this landing page again and restart process.(These buttons in table method)
-    features=['Response(in %)','Recovery Slope', 'Response Slope', 'Recovery Time', 'Response Time', 'Integral Area', 'Ratio']
+    features=['Response(in %)','Response Slope', 'Recovery Slope', 'Response Time', 'Recovery Time', 'Integral Area','Ratio']
     
     ##table display tab
     font_family, font_size = font = ('Helvetica', 10)
@@ -390,8 +390,8 @@ def data_matrix_landing(df, dat_col, header_list, data, ty, dm):
 
     flag=1
 
-    parameters=[[sg.Text('Enter the points of injection(integers; no. of entries correspond to the number of signals) based on the index column of your response data. The points of injection must be separated by commas', size=(50,3)), sg.Input(key='_POI_', enable_events=True)]
-    ]
+    parameters=[[sg.Text('Enter the points of injection(integers; no. of entries correspond to the number of signals) based on the index column of your response data. The points of injection must be separated by commas', size=(50,3)), sg.Input(key='_POI_', enable_events=True)],
+    [sg.Text('Enter the gap in seconds(integer values) between each successive data point', size=(50,1)), sg.Input(key='_GAP_')]]
 
 
 
@@ -473,7 +473,7 @@ def data_matrix_landing(df, dat_col, header_list, data, ty, dm):
             
             poi_string_list=[x.strip() for x in values['_POI_'].split(',')]
             poi_list=[int(i) for i in poi_string_list]
-            gap=1
+            gap=int(values['_GAP_'])
 
             if values['_TIMETYPE1_'] is '':
                 sg.popup_error('Integral Area parameter empty')
@@ -497,7 +497,7 @@ def data_matrix_landing(df, dat_col, header_list, data, ty, dm):
             
             poi_string_list=[x.strip() for x in values['_POI_'].split(',')]
             poi_list=[int(i) for i in poi_string_list]
-            gap=1
+            gap=int(values['_GAP_'])
             
             if values['_TOTALSENSORS_'] is '':
                 sg.popup_error('Total number of sensors field is empty')

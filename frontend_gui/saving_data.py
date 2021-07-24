@@ -5,7 +5,7 @@ from frontend_gui.saving_utils import savecsv, savexlsx, savetxt
 
 
 def save_data_dash(dm):
-    dirname = sg.popup_get_folder('Please choose a folder to save the plots')
+    dirname = sg.popup_get_folder('Please choose a folder to save the data matrix')
 
     combolayout=[[sg.Combo(['CSV', 'XLSX', 'TXT'], default_value='CSV', readonly=True, key='-LB-')]]
 
@@ -33,10 +33,10 @@ def save_data_dash(dm):
                 savecsv(dm, dirname, values['_FN_'], values['_SEP_'])
                 break
             elif values['-LB-']=='XLSX':
-                savexlsx(fig, dirname, values['_FN_'])
+                savexlsx(dm, dirname, values['_FN_'])
                 break
             elif values['-LB-']=='TXT':
-                savetxt(fig, dirname, values['_FN_'], values['_SEP_'])
+                savetxt(dm, dirname, values['_FN_'], values['_SEP_'])
                 break
             
 

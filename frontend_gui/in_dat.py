@@ -14,7 +14,7 @@ def landing_page():
     hello='This application will allow users to extract features from the response data of their sensor array. It also provides the user, the option to upload their own pre-determined data matrix. After extracting features and creating the data matrix, the application aims to provide analysis and plotting tools at various stages. The whole package has been built with open source software, namely Python. The GUI of the application has been built with PySimpleGUI, an open source library which acts as a wrapper for a popular Python GUI building library, Tkinter. The other functions of this app are supported by popular Python libraries: Pandas, MatPlotLib, NumPy, SciPy, Pillow and Scikit-Learn.'
     
     intro=[[sg.Text('Application designed by: \nDebaayus Swain(2019B2A30983P)\nKunal Gupta(2019A3PS0229P)\n\nUnder the guidance of:\nDr. A. Sree Rama Murthy, NCSS, MCD, MC&MFCG, IGCAR, Kalpakkam\n\nAt Indira Gandhi Centre for Atomic Research, Kalpakkam,\n\nA Practice School-I station of Birla Institute of Technology and Science, Pilani', size=(80,12))],
-    ]
+    [sg.Image(filename='IGCAR_logo.png', pad=((100,100),(20,0))), sg.Image(filename='bits.png', pad=((100, 100),(20,0)))]]
 
     disclaimer=[[sg.Text('The Authors do not warrant the functions contained in the program will meet your requirements or that the operation of the program will be uninterrupted or error-free.', size=(80,3))]]
     
@@ -22,7 +22,8 @@ def landing_page():
     home_tab_layout=[
     [sg.Text('Welcome to the SMO Sensing Toolbox', font=('Helvetica', 14))],
     [sg.Text(hello, size=(83,8))],
-    [sg.Text('At the time of release, the application supports time varying response of static gas injections with pre-defined indices for point of injections (POIs). Further releases might support dynamic responses even with unindexed points of injection.', size=(80,3))]]
+    [sg.Text('At the time of release, the application supports time varying response of static gas injections with pre-defined indices for point of injections (POIs). Further releases might support dynamic responses even with unindexed points of injection.', size=(80,3))],
+    [sg.Image(filename='IGCAR_logo.png', pad=((100,100),(20,0))), sg.Image(filename='bits.png', pad=((100, 100),(20,0)))]]
 
     layout2 = [[sg.Text('This tab is designed for a customised feature matrix.')],
     [sg.Text('Type I (All Features One Sensor): All the features are extracted for a single chosen sensor (based on the points of injection provided)', size=(80, 3))],
@@ -333,7 +334,7 @@ def show_table_MVA(dm, data_mat_final, header_list_mat_final, fn):
     [sg.Text('Press data matrix dashboard to insert columns, change indexing, visualize plots and then proceed to the ML algorithm applications', size=(70,2))],
     [sg.Button('Data matrix action dashboard for Type I')]]
     
-    features=['Response(in %)','Recovery Slope', 'Response Slope', 'Recovery Time', 'Response Time', 'Integral Area', 'Ratio']
+    features=['Response(in %)','Response Slope', 'Recovery Slope', 'Response Time', 'Recovery Time', 'Integral Area','Ratio']
     type2_layout1=[
     [sg.Text('Choose the feature which has been tabulated in your uploaded Type II data matrix')],
     [sg.Combo(values=features, default_value=features[0], key='_FEATURE_', size=(30, 7), readonly=True)]]
