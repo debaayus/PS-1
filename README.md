@@ -5,15 +5,16 @@ This is a project to satisfy the requirements of BITS F221 Practice School-I Sum
 
 ### Two parts in the project:
 * Backend- Feature extraction and data matrix creation
-* Frontend- Deals with pre-processing of the data, plotting, and wraps the backend modules
+* Frontend- Deals with pre-processing of the data, plotting, and wraps the backend module
 
 
-### Libraries to be used:
-* PySimpleGUI
+### Packages used:
+* PySimpleGUI(Tkinter port)
 * Matplotlib
+* Seaborn
 * Scikit-learn
 * Pandas
-* Numpy
+* NumPy
 * Pyinstaller
 ---
 ### **All the above packages were installed as 32-bit packages in a conda virtual environment for running in x86 Windows 7.**
