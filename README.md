@@ -27,9 +27,9 @@ After setting the 32bit flag to 1, please create the environment using the yml f
 `conda env create --file environment.yml`  
 
 If there are conflicts, you can create a similar environment and make conda resolve any conflicts:  
-`conda create --name project_name python=3.6 matplotlib numpy pandas scikit-learn git pysimplegui`  
+`conda create --name project_name python=3.6 matplotlib numpy pandas scikit-learn git pysimplegui auto-py-to-exe`  
 `conda activate project_name`  
-`python main.py`  
+`python final.py`  
 
 #### **Note:** 
 The above command has to be run every time before activating this project's virtual environment(in a Windows anaconda prompt), otherwise conda won't hesitate to install x64(64-bit) packages in a 32-bit environment. If you use conda regularly, then please set the flag back to 0, after completing your work in this project's 32bit environment.
