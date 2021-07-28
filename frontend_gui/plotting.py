@@ -353,8 +353,8 @@ def conc_feature_plot_dash(dm, typemat):
         y_cols=[]
         y_cols=dm.columns.tolist()
 
-        layout1_type2=[[sg.Text('Choose the X-axis column(s)', size=(45,1)), sg.Combo(values=x_cols, default_values=[x_cols[0],], key='_XAXISTYPE2_', size=(30, 6), select_mode='multiple')],
-        [sg.Text('Choose the Y-axis column(s)', size=(45,1)), sg.Listbox(values=y_cols, default_valuess=[y_cols[1],], select_mode='multiple', key='_FEATURETYPE2_', size=(30, 6))],
+        layout1_type2=[[sg.Text('Choose the X-axis column(s)', size=(45,1)), sg.Combo(values=x_cols, default_value=x_cols[0], key='_XAXISTYPE2_', size=(30, 6), readonly=True)],
+        [sg.Text('Choose the Y-axis column(s)', size=(45,1)), sg.Listbox(values=y_cols, default_values=[y_cols[1],], select_mode='multiple', key='_FEATURETYPE2_', size=(30, 6))],
         [sg.Text('Black means selected and white means not selected')]]
     
         type2_data_layout=[
@@ -587,33 +587,11 @@ def conc_feature_preview_type2(dm, theme, width, height, title, title_bold, titl
     fig = plt.figure(figsize=fig_size)
     
     ax = fig.add_subplot(111)
-    if len(concX)>=len(sensorsY):
-        list2=sensorsY
-        list1=concX
-    else:
-        list2=concX
-        list1=sensorsY
-    unique_combinations = []
- 
-    unique_combinations = [list(zip(each_permutation, list2)) for each_permutation in itertools.permutations(list1, len(list2))]
     
-    labels=[]
-    
-    for valz in unique_combinations:
-        if len(concX)<len(sensorsY):
-            [tup[::-1] for tup in valz]
-        for (val, val2) in valz:
-            y_col_no=dm.columns.get_loc(val2)
-            x_col_no= dm.columns.get_loc(val)
-            index_val=dm.index.values.tolist()
-            colname=dm.columns[x_col_no]
-            colname2=dm.columns[y_col_no]
-            for i in range(0, dm.shape[0]):
-                ax.scatter(dm.iloc[i, x_col_no], dm.iloc[i, y_col_no], alpha=float(mtransp), s=float(msize))
-                label=index_val[i]+"_"+colname+"_"+colname2
-                print(label)
-                labels.append(label)       
-    ax.legend(labels=labels, loc='upper left', bbox_to_anchor=(1,1))
+    for val in sensorsY:
+        ax.scatter(dm.loc[:, concX], dm.loc[:,val], label=val, alpha=float(mtransp), s=float(msize))
+        ax.legend(loc='upper left', bbox_to_anchor=(1,1), prop={'size': int(legend_size)})
+        
 
     
     ax.set_title(title , fontsize=int(title_size), fontweight=title_bold)

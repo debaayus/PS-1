@@ -1,3 +1,4 @@
+import sys, os
 import PySimpleGUI as sg
 import pandas as pd 
 import numpy as np
@@ -10,7 +11,19 @@ from frontend_gui.data_matrix_viz import options
 The first page seen by the user when he starts the application.
 08/07- More functionality of the home/landing page can be added and it can be made to look good
 """
+def resource_path(relative_path):
+    #Get the absolute path to the resource, works for dev and for PyInstaller
+        try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)
+
+
 def landing_page():
+
+    
     hello='This application will allow users to extract features from the response data of their sensor array. It also provides the user, the option to upload their own pre-determined data matrix. After extracting features and creating the data matrix, the application aims to provide analysis and plotting tools at various stages. The whole package has been built with open source software, namely Python. The GUI of the application has been built with PySimpleGUI, an open source library which acts as a wrapper for a popular Python GUI building library, Tkinter. The other functions of this app are supported by popular Python libraries: Pandas, MatPlotLib, NumPy, SciPy, Pillow and Scikit-Learn.'
     
     intro=[[sg.Text('Application designed by: \nDebaayus Swain(2019B2A30983P)\nKunal Gupta(2019A3PS0229P)\n\nUnder the guidance of:\nDr. A. Sree Rama Murthy, NCSS, MCD, MC&MFCG, IGCAR, Kalpakkam\n\nAt Indira Gandhi Centre for Atomic Research, Kalpakkam,\n\nA Practice School-I station of Birla Institute of Technology and Science, Pilani', size=(80,12))],
@@ -23,13 +36,13 @@ def landing_page():
     [sg.Text('Welcome to the SMO Sensing Toolbox', font=('Helvetica', 14))],
     [sg.Text(hello, size=(83,8))],
     [sg.Text('At the time of release, the application supports time varying response of static gas injections with pre-defined indices for point of injections (POIs). Further releases might support dynamic responses even with unindexed points of injection.', size=(80,3))],
-    [sg.Image(filename='IGCAR_logo.png', pad=((100,100),(20,0))), sg.Image(filename='bits.png', pad=((100, 100),(20,0)))]]
+    [sg.Image(filename=resource_path('IGCAR_logo.png'), pad=((100,100),(20,0))), sg.Image(filename=resource_path('bits.png'), pad=((100, 100),(20,0)))]]
 
     layout2 = [[sg.Text('This tab is designed for a customised feature matrix.')],
     [sg.Text('Type I (All Features One Sensor): All the features are extracted for a single chosen sensor (based on the points of injection provided)', size=(80, 3))],
     [sg.Text('Type II (One Feature All Sensors): One chosen feature is extracted for multiple sensors (based on the points of injection provided)', size=(80,6))],
     [sg.Text('The following are the features available in the extraction module', size=(80,1))],
-    [sg.Multiline("1. Response% : Differential signal normalised with respect to baseline.\n2. Response slope: Maximum rate of change of signal during response.\n3. Recovery slope: Maximum rate of change of signal during recovery.\n4. Response time: The time required for 90 %% response of sensor signal in seconds.\n5. Recovery time: The time taken for 90 %% recovery of sensor signal in seconds.\n6. Integral area: Area of the signal swept between between the times of point of injection and user defined value in seconds.", disabled=True, size=(80, 8))],
+    [sg.Multiline("1. Response% : Differential signal normalised with respect to baseline.\n2. Response slope: Maximum rate of change of signal during response.\n3. Recovery slope: Maximum rate of change of signal during recovery.\n4. Response time: The time required for 90% response of sensor signal in seconds.\n5. Recovery time: The time taken for 90% recovery of sensor signal in seconds.\n6. Integral area: Area of the signal swept between between the times of point of injection and user defined value in seconds.", disabled=True, size=(80, 8))],
     [sg.Text('', size=(80,5))],
     [sg.Text('Press the button below to upload a csv file of a data matrix and proceed to the visualization and multivariate analysis of the data matrix', size=(80,2))],
     [sg.Button('Upload data matrix')]]
@@ -236,7 +249,7 @@ def show_table_final(df,data_final, header_list_final ,fn):
     [sg.Text('Enter the column number of the first sensor data. (eg. Column number is 3 if the first sensor data column is the 3rd column(if index and timestamp are the first 2 columns.))', size=(70,2)), sg.Input(key='_DATCOL_', enable_events=True)]]
     
     layout = [[sg.Frame('Input', frm_input_layout)],
-    [sg.Frame('Parameters from visual cues', layout=param)],
+    [sg.Frame('Parameters from visual inspection', layout=param)],
     [sg.Text('If you missed entering your delimiter, please restart the program', size=(50,1))], 
     [sg.Text('Press submit to confirm the above dataframe for further computation', size=(50,1))],
     [sg.Submit()]]
@@ -347,7 +360,7 @@ def show_table_MVA(dm, data_mat_final, header_list_mat_final, fn):
     [sg.Text('Type II(One Feature All Sensors): One chosen feature is extracted for multiple sensors (based on the points of injection provided)')],
     [sg.Text('', size=(80,3))],
     [sg.Text('The following are the features available in the extraction module', size=(80,1))],
-    [sg.Multiline("1. Response% : Differential signal normalised with respect to baseline.\n2. Response slope: Maximum rate of change of signal during response.\n3. Recovery slope: Maximum rate of change of signal during recovery.\n4. Response time: The time required for 90 %% response of sensor signal in seconds.\n5. Recovery time: The time taken for 90 %% recovery of sensor signal in seconds.\n6. Integral area: Area of the signal swept between between the times of point of injection and user defined value in seconds.", disabled=True, size=(80, 8))]]
+    [sg.Multiline("1. Response% : Differential signal normalised with respect to baseline.\n2. Response slope: Maximum rate of change of signal during response.\n3. Recovery slope: Maximum rate of change of signal during recovery.\n4. Response time: The time required for 90% response of sensor signal in seconds.\n5. Recovery time: The time taken for 90% recovery of sensor signal in seconds.\n6. Integral area: Area of the signal swept between between the times of point of injection and user defined value in seconds.", disabled=True, size=(80, 8))]]
 
     layout=[[sg.TabGroup([[sg.Tab('Explanation', layout=explainertab)], [sg.Tab('Feature matrix display', layout=basic_layout)], [sg.Tab('Type I matrix', layout=type1_layout)], [sg.Tab('Type II matrix', layout=type2_layout)] ])]]
 

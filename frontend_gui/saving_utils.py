@@ -27,6 +27,10 @@ def savepng(fig, dirname, filename, dots_per_inch):
         fig.savefig(fig_path, format='png', dpi=float(dots_per_inch), bbox_inches='tight')
         return
         
+def savesvg(fig, dirname, filename, dots_per_inch):
+        fig_path=dirname+'/'+filename+'.svg'
+        fig.savefig(fig_path, format='svg', dpi=float(dots_per_inch), bbox_inches='tight')
+        return
 
 
 def savejpeg(fig, dirname, filename, dots_per_inch):

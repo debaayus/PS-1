@@ -1,8 +1,6 @@
 import PySimpleGUI as sg
-from frontend_gui.saving_utils import savetiff
-from frontend_gui.saving_utils import savepng
-from frontend_gui.saving_utils import savejpeg
-from frontend_gui.saving_utils import savepdf
+from frontend_gui.saving_utils import savetiff, savepng, savejpeg, savepdf, savesvg
+
 
 """
 The commented out code is an alternative method which was abandoned due to ambiguity with the button functioning.
@@ -20,7 +18,7 @@ def save_plot_dashboard(fig):
     except TypeError:
         return
     ##more formats can be added based on the user's requirements
-    combolayout=[[sg.Combo(['PNG', 'JPEG', 'TIFF', 'PDF'], default_value='PNG', readonly=True, key='-LB-')]] 
+    combolayout=[[sg.Combo(['PNG', 'JPEG', 'SVG', 'TIFF', 'PDF'], default_value='PNG', readonly=True, key='-LB-')]] 
 
     
     layout=[[sg.Text('Enter the filename', size=(45,1)), sg.Input(default_text='figure', key='_FN_', enable_events=True)],
@@ -48,6 +46,9 @@ def save_plot_dashboard(fig):
                 break
             elif values['-LB-']=='JPEG':
                 savejpeg(fig, dirname, values['_FN_'], values['_DPI_'])
+                break
+            elif values['-LB-']=='SVG':
+                savesvg(fig, dirname, values['_FN_'], values['_DPI_'])
                 break
             elif values['-LB-']=='TIFF':
                 savetiff(fig, dirname, values['_FN_'], values['_DPI_'])
