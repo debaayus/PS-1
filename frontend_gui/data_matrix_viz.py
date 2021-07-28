@@ -362,7 +362,7 @@ def data_matrix_landing(df, dat_col, header_list, data, ty, dm):
                 ## Create and show data matrix using above method
                 ## If user is satisfied return the created data matrix to final.py
                 ## If user wants to change matrix, call this landing page again and restart process.(These buttons in table method)
-    features=['Response(in %)','Recovery Slope', 'Response Slope', 'Recovery Time', 'Response Time', 'Integral Area', 'Ratio']
+    features=['Response(in %)','Response Slope', 'Recovery Slope', 'Response Time', 'Recovery Time', 'Integral Area','Ratio']
     
     ##table display tab
     font_family, font_size = font = ('Helvetica', 10)
@@ -386,12 +386,12 @@ def data_matrix_landing(df, dat_col, header_list, data, ty, dm):
     [sg.Text('Type II(One Feature All Sensors): One chosen feature is extracted for multiple sensors (based on the points of injection provided)')],
     [sg.Text('', size=(80,3))],
     [sg.Text('The following are the features available in the extraction module', size=(80,1))],
-    [sg.Multiline("1. Response% : Differential signal normalised with respect to baseline.\n2. Response slope: Maximum rate of change of signal during response.\n3. Recovery slope: Maximum rate of change of signal during recovery.\n4. Response time: The time required for 90 %% response of sensor signal in seconds.\n5. Recovery time: The time taken for 90 %% recovery of sensor signal in seconds.\n6. Integral area: Area of the signal swept between between the times of point of injection and user defined value in seconds.", disabled=True, size=(80, 8))]]
+    [sg.Multiline("1. Response% : Differential signal normalised with respect to baseline.\n2. Response slope: Maximum rate of change of signal during response.\n3. Recovery slope: Maximum rate of change of signal during recovery.\n4. Response time: The time required for 90% response of sensor signal in seconds.\n5. Recovery time: The time taken for 90% recovery of sensor signal in seconds.\n6. Integral area: Area of the signal swept between between the times of point of injection and user defined value in seconds.", disabled=True, size=(80, 8))]]
 
     flag=1
 
-    parameters=[[sg.Text('Enter the points of injection(integers; no. of entries correspond to the number of signals) based on the index column of your response data. The points of injection must be separated by commas', size=(50,3)), sg.Input(key='_POI_', enable_events=True)]
-    ]
+    parameters=[[sg.Text('Enter the points of injection(integers; no. of entries correspond to the number of signals) based on the index column of your response data. The points of injection must be separated by commas', size=(60,3)), sg.Input(key='_POI_', enable_events=True)],
+    [sg.Text('Enter the gap in seconds(integer values) between each successive data points', size=(60,1)), sg.Input(key='_GAP_')]]
 
 
 
@@ -470,10 +470,14 @@ def data_matrix_landing(df, dat_col, header_list, data, ty, dm):
             if values['_POI_'] is '':
                 sg.popup_error('POI field is empty. Please fill the mandatory parameter')
                 continue
+
+            if values['_GAP_'] is '':
+                sg.popup_error('Gap field is empty. It is a mandatory parameter')
+                continue
             
             poi_string_list=[x.strip() for x in values['_POI_'].split(',')]
             poi_list=[int(i) for i in poi_string_list]
-            gap=1
+            gap=int(values['_GAP_'])
 
             if values['_TIMETYPE1_'] is '':
                 sg.popup_error('Integral Area parameter empty')
@@ -494,10 +498,14 @@ def data_matrix_landing(df, dat_col, header_list, data, ty, dm):
             if values['_POI_'] is '':
                 sg.popup_error('POI field is empty. Please fill the mandatory parameter')
                 continue
+
+            if values['_GAP_'] is '':
+                sg.popup_error('Gap field is empty. It is a mandatory parameter')
+                continue
             
             poi_string_list=[x.strip() for x in values['_POI_'].split(',')]
             poi_list=[int(i) for i in poi_string_list]
-            gap=1
+            gap=int(values['_GAP_'])
             
             if values['_TOTALSENSORS_'] is '':
                 sg.popup_error('Total number of sensors field is empty')

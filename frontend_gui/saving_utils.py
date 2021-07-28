@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import openpyxl
 from PIL import Image
 from io import BytesIO
 
@@ -26,6 +27,10 @@ def savepng(fig, dirname, filename, dots_per_inch):
         fig.savefig(fig_path, format='png', dpi=float(dots_per_inch), bbox_inches='tight')
         return
         
+def savesvg(fig, dirname, filename, dots_per_inch):
+        fig_path=dirname+'/'+filename+'.svg'
+        fig.savefig(fig_path, format='svg', dpi=float(dots_per_inch), bbox_inches='tight')
+        return
 
 
 def savejpeg(fig, dirname, filename, dots_per_inch):
@@ -45,13 +50,12 @@ def savecsv(dm, dirname, filename, separator):
 
 def savexlsx(dm, dirname, filename):
         fig_path=dirname+'/'+filename+'.xlsx'
-        dm.to_excel(fig_path, sep=separator, index=True ,header=True)
+        dm.to_excel(fig_path, index=True ,header=True)
         return
 
 def savetxt(dm, dirname, filename, delim):
         fig_path=dirname+'/'+filename+'.txt'
-        numpy_array = dm.to_numpy()
-        np.savetxt(fig_path, fmt='%d', delimiter=delim, header=True, index=True)
+        dm.to_csv(fig_path, sep=delim, header=True, index=True)
         return
 
 
