@@ -18,6 +18,9 @@ This is a project to satisfy the requirements of BITS F221 Practice School-I Sum
 * Pyinstaller
 * auto-py-to-exe
 ---
+Link to executable file (for Windows): https://drive.google.com/file/d/1g98IkrE84rWCmXGH-MqbUY1aPFLq-xxQ/view?usp=sharing
+
+
 ### **All the above packages were installed as 32-bit packages in a conda virtual environment for running in x86 Windows 7.**
 There shouldn't be a problem in running the 32-bit(x86) executable in a 64-bit(x64) Windows OS.
 
