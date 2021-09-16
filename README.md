@@ -31,7 +31,7 @@ After setting the 32bit flag to 1, please create the environment using the yml f
 `conda env create --file environment.yml`  
 
 If there are conflicts, you can create a similar environment and make conda resolve any conflicts:  
-`conda create --name project_name python=3.6 matplotlib numpy pandas scikit-learn git pysimplegui auto-py-to-exe`  
+`conda create --name project_name python=3.6 matplotlib numpy pandas scikit-learn git`  
 `conda activate project_name`  
 `python final.py`  
 
