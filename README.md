@@ -1,5 +1,5 @@
 ##
-# **PS-1 project at Indira Gandhi Centre for Atomic Research** 
+# **PS-1 project** 
 
 This is a project to satisfy the requirements of BITS F221 Practice School-I Summer term 2021.
 
